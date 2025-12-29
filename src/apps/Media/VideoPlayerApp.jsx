@@ -1,7 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, SkipBack, SkipForward } from 'lucide-react';
+import { getDownloadUrl } from '../../lib/api';
 
-export default function VideoPlayerApp({ src = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm" }) {
+export default function VideoPlayerApp({ file }) {
+    const defaultSrc = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm";
+    const src = file ? getDownloadUrl(file.id) : defaultSrc;
+
     const videoRef = useRef(null);
     const [playing, setPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
