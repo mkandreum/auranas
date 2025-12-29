@@ -63,23 +63,24 @@ export default function Taskbar() {
                 {/* Main Dock */}
                 <div className="
                     h-14 px-4 flex items-center gap-2 
-                    bg-white/10 backdrop-blur-2xl 
-                    border border-white/20 
-                    rounded-2xl
-                    shadow-[0_4px_30px_rgba(0,0,0,0.1)]
+                    bg-[#0a0a0a]/90 backdrop-blur-xl 
+                    border border-yellow-500/30 
+                    clip-tech-border
+                    shadow-[0_0_20px_rgba(252,211,77,0.15)]
                     relative
-                    transition-all duration-300
-                    hover:bg-white/15 hover:border-white/30 hover:scale-[1.01]
                 ">
+                    {/* Background Detail */}
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+
                     {/* Start Button Area (Left) */}
                     <div className="mr-4 flex items-center">
                         <button
-                            className="group relative w-10 h-10 flex items-center justify-center hover:bg-white/10 transition-all rounded-xl"
+                            className="group relative w-10 h-10 flex items-center justify-center hover:bg-yellow-500/10 transition-all clip-path-[polygon(20%_0,100%_0,100%_100%,0%_100%,0%_20%)]"
                             onClick={() => setStartOpen(!startOpen)}
                         >
-                            <div className="w-5 h-5 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-md shadow-lg group-hover:scale-110 transition-transform"></div>
-                            {/* Inner detail */}
-                            <div className="absolute w-2 h-2 bg-white/50 rounded-full blur-[1px]"></div>
+                            <div className="absolute inset-0 border border-yellow-500/30 group-hover:border-yellow-500/80 transition-colors"></div>
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-sm grid place-items-center group-hover:rotate-45 transition-transform"></div>
+                            <div className="absolute top-0 right-0 w-1 h-1 bg-yellow-500"></div>
                         </button>
                     </div>
 
@@ -93,37 +94,44 @@ export default function Taskbar() {
                             return (
                                 <button
                                     key={appId}
-                                    onClick={() => focusWindow(windowId)}
+                                    onClick={() => focusWindow(windowId)} // Simplified click
                                     className={`
                                         group relative w-10 h-10 flex items-center justify-center 
-                                        transition-all duration-300 rounded-xl
-                                        ${isActive ? 'bg-white/20 scale-105 shadow-inner' : 'hover:bg-white/10 hover:scale-110'}
+                                        transition-all duration-300
+                                        ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}
                                     `}
                                 >
-                                    <div className={`p-1.5 transition-colors text-white drop-shadow-md`}>
-                                        <Icon size={22} className={isActive ? 'text-white' : 'text-gray-200'} />
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-yellow-500/20 blur-md rounded-full animate-pulse"></div>
+                                    )}
+                                    <div className={`p-2 rounded bg-black/50 border ${isActive ? 'border-yellow-500 text-yellow-500' : 'border-white/10 text-gray-400 group-hover:text-white group-hover:border-white/30'} clip-tech-border transition-colors`}>
+                                        <Icon size={20} />
                                     </div>
 
-                                    {/* Active Indicator Dot */}
-                                    {isActive && <div className="absolute -bottom-1 w-1 h-1 bg-white rounded-full shadow-[0_0_5px_white]"></div>}
+                                    {/* Active Indicator */}
+                                    {isActive && <div className="absolute -bottom-1 w-8 h-0.5 bg-yellow-500 shadow-[0_0_5px_#eab308]"></div>}
                                 </button>
                             );
                         })}
                     </div>
 
                     {/* Separator */}
-                    <div className="w-px h-6 bg-white/20 mx-2"></div>
+                    <div className="w-px h-8 bg-white/10 mx-2"></div>
 
                     {/* System Tray (Right) */}
-                    <div className="flex items-center gap-4 pl-1 text-white/90">
-                        <div className="flex items-center gap-3">
-                            <Wifi size={16} className="drop-shadow-md" />
-                            <Volume2 size={16} className="drop-shadow-md" />
-                            <Battery size={16} className="drop-shadow-md" />
+                    <div className="flex items-center gap-3 pl-2">
+                        <div className="flex items-center gap-2 text-yellow-500/80">
+                            <Wifi size={14} />
+                            <Volume2 size={14} />
+                            <Battery size={14} />
                         </div>
+                        <div className="h-8 w-px bg-white/10"></div>
                         <Clock />
                     </div>
                 </div>
+
+                {/* Decorative Bottom Line */}
+                <div className="absolute bottom-[-10px] w-[80%] h-1 bg-yellow-500/20 rounded-full blur-sm"></div>
             </div>
 
             {/* Start Menu Overlay (Placeholder if needed someday) */}
