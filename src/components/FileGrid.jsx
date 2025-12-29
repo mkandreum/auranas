@@ -96,12 +96,18 @@ const Row = ({ index, style, data }) => {
     );
 };
 
-export default function FileGrid({ onFileClick, selectedFiles = [] }) {
-    const { files, loading } = useFileSystem();
-    const selectedIds = useMemo(() => new Set(selectedFiles.map(f => f.id)), [selectedFiles]);
+// Inner Grid Component to handle dynamic columns based on width
+const InnerGrid = ({ width, height, files, onFileClick, selectedIds }) => {
+    // Dynamic column count calculation
+    const columnCount = useMemo(() => {
+        if (width < 640) return 3; // Mobile
+        if (width < 1024) return 4; // Tablet
+        if (width < 1440) return 6; // Desktop
+        return 8; // Large Desktop
+    }, [width]);
 
     const processedData = useMemo(() => {
-        if (!files.length) return { rows: [], columnCount: 5 };
+        if (!files.length) return { rows: [], columnCount };
 
         const groups = {};
         files.forEach(file => {
@@ -112,27 +118,49 @@ export default function FileGrid({ onFileClick, selectedFiles = [] }) {
         });
 
         const rows = [];
-        const COLUMN_COUNT = 5;
 
         Object.keys(groups).forEach(date => {
             rows.push({ type: 'header', date, count: groups[date].length, height: 60 });
 
             const items = groups[date];
-            for (let i = 0; i < items.length; i += COLUMN_COUNT) {
-                const chunk = items.slice(i, i + COLUMN_COUNT);
-                while (chunk.length < COLUMN_COUNT) chunk.push(null);
-                rows.push({ type: 'row', items: chunk, height: 0 });
+            for (let i = 0; i < items.length; i += columnCount) {
+                const chunk = items.slice(i, i + columnCount);
+                while (chunk.length < columnCount) chunk.push(null);
+                rows.push({ type: 'row', items: chunk, height: 0 }); // height calculated in getItemSize
             }
         });
 
-        return { rows, columnCount: COLUMN_COUNT };
-    }, [files]);
+        return { rows, columnCount };
+    }, [files, columnCount]);
 
-    const getItemSize = (width) => (index) => {
+    const getItemSize = (index) => {
         const row = processedData.rows[index];
         if (row.type === 'header') return 60;
-        return width / processedData.columnCount;
+        return width / columnCount; // Square aspect ratio
     };
+
+    return (
+        <List
+            height={height}
+            itemCount={processedData.rows.length}
+            itemSize={getItemSize}
+            width={width}
+            itemData={{
+                rows: processedData.rows,
+                columnCount: processedData.columnCount,
+                width,
+                onFileClick,
+                selectedIds
+            }}
+        >
+            {Row}
+        </List>
+    );
+};
+
+export default function FileGrid({ onFileClick, selectedFiles = [] }) {
+    const { files, loading } = useFileSystem();
+    const selectedIds = useMemo(() => new Set(selectedFiles.map(f => f.id)), [selectedFiles]);
 
     if (loading) {
         return (
@@ -161,21 +189,13 @@ export default function FileGrid({ onFileClick, selectedFiles = [] }) {
         <div className="flex-1 h-full w-full bg-[#0d0d0d]">
             <AutoSizer>
                 {({ height, width }) => (
-                    <List
-                        height={height}
-                        itemCount={processedData.rows.length}
-                        itemSize={getItemSize(width)}
+                    <InnerGrid
                         width={width}
-                        itemData={{
-                            rows: processedData.rows,
-                            columnCount: processedData.columnCount,
-                            width,
-                            onFileClick,
-                            selectedIds
-                        }}
-                    >
-                        {Row}
-                    </List>
+                        height={height}
+                        files={files}
+                        onFileClick={onFileClick}
+                        selectedIds={selectedIds}
+                    />
                 )}
             </AutoSizer>
         </div>
