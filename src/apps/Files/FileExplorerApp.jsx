@@ -1,21 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import useFileSystem from '../../store/useFileSystem';
+import useOS from '../../os/useOS';
 import FileGrid from '../../components/FileGrid';
 import { HardDrive, Folder, ChevronRight, ChevronDown, RefreshCw, Home } from 'lucide-react';
 
 export default function FileExplorerApp() {
     const { loadFiles, files, currentPath, navigateUp, loading } = useFileSystem();
-    const [uploading, setUploading] = useState(false);
-
-    useEffect(() => {
-        loadFiles(currentPath);
-    }, [currentPath]);
+    const { openWindow } = useOS(); // Need useOS to open other apps
 
     const handleFileClick = (file) => {
         if (file.type === 'directory') {
             loadFiles(file.path);
         } else {
-            console.log('Open file:', file);
+            console.log('Opening file:', file);
+            const ext = file.name.split('.').pop().toLowerCase();
+
+            // File Associations
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                openWindow('photos', { title: file.name, params: { file } }); // Pass file param if PhotosApp supported it
+            } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
+                openWindow('music', { title: 'Sonic Wave', params: { file } });
+            } else if (['mp4', 'mkv', 'webm'].includes(ext)) {
+                openWindow('video', { title: 'Neon Player', params: { file } });
+            } else if (ext === 'pdf') {
+                openWindow('pdf', { title: file.name, params: { file } });
+            } else if (['txt', 'js', 'json', 'css', 'html', 'md'].includes(ext)) {
+                openWindow('code', { title: file.name, params: { file } });
+            } else {
+                alert("No app associated with this file type.");
+            }
         }
     };
 

@@ -17,6 +17,7 @@ const MusicPlayerApp = React.lazy(() => import('./Media/MusicPlayerApp'));
 const CalendarApp = React.lazy(() => import('./Productivity/CalendarApp'));
 const BrowserApp = React.lazy(() => import('./Utility/BrowserApp'));
 const AIApp = React.lazy(() => import('./Utility/AIApp'));
+const PdfViewerApp = React.lazy(() => import('./Utility/PdfViewerApp'));
 
 export const APP_REGISTRY = {
     // 🔴 SYSTEM
@@ -170,6 +171,15 @@ export const APP_REGISTRY = {
         component: AIApp,
         width: 500,
         height: 700
+    },
+    pdf: {
+        id: 'pdf',
+        title: 'PDF Viewer',
+        icon: 'FileText',
+        category: 'Utility',
+        component: PdfViewerApp,
+        width: 800,
+        height: 900
     }
 };
 
