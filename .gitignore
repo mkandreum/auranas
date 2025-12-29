@@ -1,0 +1,10 @@
+# AuraNAS
+
+*.db
+*.log
+.env
+node_modules/
+storage/
+cache/
+data/
+dist/

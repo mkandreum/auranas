@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+
+# Git
+.git
+.gitignore
+
+# Documentation and demos
+*.md
+!README.md
+!COOLIFY_DEPLOY.md
+demo_*.html
+*.spec.md
+
+# Runtime data
+storage
+cache
+data
+
+# Environment
+.env
+.env.*
+
+# Development
+*.log
+npm-debug.log*
+
+# Build artifacts
+dist
+node_modules
+
+# Apache config (not needed for Docker)
+apache-vhost.conf
+*.conf
+
