@@ -71,7 +71,7 @@ export default function StartMenu({ onClose }) {
                         return (
                             <button
                                 key={app.id}
-                                onClick={() => { openWindow(app.id); onClose(); }}
+                                onClick={() => { openWindow(app.id, app); onClose(); }}
                                 className="flex flex-col items-center justify-center p-3 rounded-lg hover:bg-white/10 group transition-all"
                             >
                                 <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-2 group-hover:scale-110 transition-transform group-hover:bg-yellow-500/20 group-hover:shadow-[0_0_15px_rgba(234,179,8,0.3)]">

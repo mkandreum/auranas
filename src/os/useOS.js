@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { APP_REGISTRY, getApp } from '../apps/registry';
 
 const useOS = create((set, get) => ({
     windows: [],
@@ -17,14 +16,11 @@ const useOS = create((set, get) => ({
     ],
 
     // Window Actions
-    openWindow: (appId, params = {}) => {
+    openWindow: (appId, config = {}) => {
         const { windows, highestZIndex } = get();
-        const appConfig = getApp(appId);
 
-        if (!appConfig) {
-            console.error(`App ${appId} not found in registry`);
-            return;
-        }
+        // Check if single instance app is already open (optional, but good practice)
+        // For now we allow multiples unless specified, but we need the config passed in.
 
         const id = uuidv4();
         const newZ = highestZIndex + 1;
@@ -32,15 +28,15 @@ const useOS = create((set, get) => ({
         const newWindow = {
             id,
             app: appId,
-            title: params.title || appConfig.title,
-            icon: appConfig.icon,
+            title: config.title || 'Application',
+            icon: config.icon || 'AppWindow',
             isOpen: true,
             isMinimized: false,
             isMaximized: false,
             zIndex: newZ,
             position: { x: 50 + (windows.length * 20), y: 50 + (windows.length * 20) },
-            size: { width: appConfig.width, height: appConfig.height },
-            params: { ...appConfig.props, ...params } // Merge registry props with instance params
+            size: { width: config.width || 800, height: config.height || 600 },
+            params: { ...(config.props || {}), ...(config.params || {}) }
         };
 
         set({

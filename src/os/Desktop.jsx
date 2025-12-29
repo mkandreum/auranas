@@ -67,7 +67,7 @@ export default function Desktop() {
                         <div
                             key={iconConfig.id}
                             className="group flex flex-col items-center justify-center p-2 rounded hover:bg-white/10 cursor-pointer transition-colors"
-                            onDoubleClick={() => openWindow(iconConfig.app)}
+                            onDoubleClick={() => openWindow(iconConfig.app, app)}
                         >
                             <div className="w-16 h-16 flex items-center justify-center mb-2 relative">
                                 <div className="absolute inset-0 bg-yellow-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-full"></div>
