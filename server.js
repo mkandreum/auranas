@@ -111,6 +111,8 @@ app.get('/api/years/:year/months', authMiddleware, fileController.getMonths);
 // File Actions
 app.post('/api/files/delete', authMiddleware, fileController.deleteFiles);
 app.post('/api/files/restore', authMiddleware, fileController.restoreFiles);
+app.post('/api/files/directory', authMiddleware, fileController.createDirectory); // New Endpoint
+app.put('/api/files/:id/rename', authMiddleware, fileController.renameFile);     // New Endpoint
 app.post('/api/files/empty-trash', authMiddleware, fileController.emptyTrash);
 app.post('/api/files/favorite', authMiddleware, fileController.toggleFavorite);
 app.post('/api/files/bulk-favorite', authMiddleware, fileController.bulkFavorite);
