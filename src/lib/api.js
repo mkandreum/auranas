@@ -41,6 +41,8 @@ export const fetchMonths = async (year) => (await api.get(`/years/${year}/months
 // ===== FILE ACTIONS =====
 export const deleteFiles = async (ids, permanent = false) => (await api.post('/files/delete', { ids, permanent })).data;
 export const restoreFiles = async (ids) => (await api.post('/files/restore', { ids })).data;
+export const createDirectory = async (path, name) => (await api.post('/files/directory', { path, name })).data;
+export const renameFile = async (id, newName) => (await api.put(`/files/${id}/rename`, { name: newName })).data;
 export const emptyTrash = async () => (await api.post('/files/empty-trash')).data;
 export const toggleFavorite = async (id, isFavorite) => (await api.post('/files/favorite', { id, isFavorite })).data;
 export const bulkFavorite = async (ids, isFavorite) => (await api.post('/files/bulk-favorite', { ids, isFavorite })).data;
