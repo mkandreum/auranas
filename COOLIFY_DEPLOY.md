@@ -27,9 +27,9 @@ If you prefer using Docker Compose:
 
 1. In Coolify, go to **Settings** > **Build Pack**
 2. Select **Docker Compose**
-3. Ensure **Docker Compose Location** is `./docker-compose.yml`
+3. Ensure **Docker Compose Location** is `./docker-compose.yaml`
 4. **IMPORTANT**: When using Docker Compose in Coolify, **volumes are essential**.
-   - Coolify will automatically recognize the volumes defined in `docker-compose.yml` (`auranas_storage`, `auranas_cache`, `auranas_data`).
+   - Coolify will automatically recognize the volumes defined in `docker-compose.yaml` (`auranas_storage`, `auranas_cache`, `auranas_data`).
    - You **must** still ensure they are listed in the Storage tab if they don't appear automatically.
 
 ### 3. Environment Variables
