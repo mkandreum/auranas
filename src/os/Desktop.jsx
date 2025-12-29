@@ -7,44 +7,15 @@ import * as LucideIcons from 'lucide-react';
 import { getApp } from '../apps/registry.jsx';
 import { ClockWidget, SystemWidget } from './DesktopWidgets';
 
-const CyberHUD = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
-        {/* Top Right Detail */}
-        <div className="absolute top-2 right-2 flex flex-col items-end opacity-40">
-            <div className="flex gap-1 mb-1">
-                <div className="w-16 h-1 bg-yellow-500"></div>
-                <div className="w-4 h-1 bg-red-500"></div>
-            </div>
-            <div className="font-mono text-[10px] text-yellow-500 tracking-[0.2em]">SYSTEM SECURE</div>
-        </div>
-
-        {/* Floating Numbers Background */}
-        <div className="absolute left-[10%] top-[20%] font-mono text-yellow-500/10 text-xs flex flex-col gap-1">
-            {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i}>{Math.random().toString(16).substring(2, 10).toUpperCase()}</div>
-            ))}
-        </div>
-
-        {/* Center decorative ring */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vh] h-[60vh] rounded-full border border-yellow-500/5 rotate-45 pointer-events-none"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[58vh] h-[58vh] rounded-full border border-dashed border-yellow-500/5 -rotate-12 pointer-events-none animate-spin" style={{ animationDuration: '60s' }}></div>
-    </div>
-);
-
-const GridBackground = ({ isMobile }) => (
-    <div className="absolute inset-0 bg-[#020202] overflow-hidden">
-        {/* Cyberpunk Grid - Intense */}
-        <div className="absolute inset-0 cyber-grid-intense opacity-30 transform perspective-[1000px] rotate-x-12 scale-110"></div>
-
-        {/* Atmosphere */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-yellow-500/5"></div>
-        <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,transparent_0%,#000_70%)] opacity-80"></div>
-
-        {/* Scanlines Overlay - Light */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-[0] bg-[length:100%_2px,3px_100%] opacity-20 pointer-events-none"></div>
-
-        {/* HUD Elements */}
-        {!isMobile && <CyberHUD />}
+const Wallpaper = () => (
+    <div className="absolute inset-0 overflow-hidden z-0">
+        <img
+            src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2564"
+            className="w-full h-full object-cover scale-105 pointer-events-none select-none"
+            alt="Wallpaper"
+        />
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
     </div>
 );
 
@@ -82,13 +53,13 @@ export default function Desktop() {
     };
 
     return (
-        <div className="h-screen w-screen overflow-hidden bg-black text-white relative font-mono select-none">
+        <div className="h-screen w-screen overflow-hidden bg-black text-white relative font-sans select-none">
             {/* Wallpaper & Effects */}
-            <GridBackground isMobile={isMobile} />
+            <Wallpaper />
 
             {/* Desktop Widgets Layer */}
             {!isMobile && (
-                <div className="absolute top-8 right-8 flex flex-col items-end gap-6 z-0 mix-blend-lighten pointer-events-none hidden md:flex">
+                <div className="absolute top-8 right-8 flex flex-col items-end gap-6 z-0 pointer-events-none hidden md:flex drop-shadow-lg">
                     <ClockWidget />
                     <div className="pointer-events-auto scale-90 origin-top-right">
                         <SystemWidget />
@@ -115,31 +86,32 @@ export default function Desktop() {
                     if (!app) return null;
 
                     const Icon = LucideIcons[app.icon] || LucideIcons.File;
+                    // Dynamic Colors for icons based on category (placeholder logic)
+                    const iconColor = app.category === 'Media' ? 'text-pink-400' :
+                        app.category === 'Productivity' ? 'text-blue-400' :
+                            app.category === 'System' ? 'text-cyan-400' : 'text-emerald-400';
+
                     return (
                         <div
                             key={iconConfig.id}
                             className={`group flex flex-col items-center justify-center transition-all duration-200 relative
                                 ${isMobile
                                     ? 'active:scale-95'
-                                    : 'hover:scale-105 cursor-pointer p-2'
+                                    : 'hover:scale-105 cursor-pointer p-2 rounded-xl hover:bg-white/10 hover:backdrop-blur-md border border-transparent hover:border-white/20'
                                 }
                             `}
                             onClick={isMobile ? () => openWindow(iconConfig.app, app) : undefined}
                             onDoubleClick={!isMobile ? () => openWindow(iconConfig.app, app) : undefined}
                         >
-                            {/* Hover effect background */}
-                            <div className="absolute inset-0 bg-yellow-500/0 group-hover:bg-yellow-500/10 clip-tech-border transition-all duration-300"></div>
-
-                            <div className={`flex items-center justify-center mb-3 relative z-10 ${isMobile ? 'w-14 h-14' : 'w-16 h-16'}`}>
-                                {/* Icon Glow */}
-                                <div className="absolute inset-0 bg-yellow-500/0 group-hover:bg-yellow-500/20 blur-xl transition-all duration-500 rounded-full"></div>
-                                <Icon strokeWidth={1.5} size={isMobile ? 32 : 40} className={`${isMobile ? 'text-yellow-500' : 'text-gray-400 group-hover:text-yellow-400'} transition-colors drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]`} />
+                            <div className={`flex items-center justify-center mb-2 relative z-10 ${isMobile ? 'w-14 h-14' : 'w-16 h-16'} drop-shadow-2xl`}>
+                                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 rounded-full"></div>
+                                <Icon strokeWidth={1.5} size={isMobile ? 32 : 48} className={`${isMobile ? 'text-white' : 'text-white'} transition-colors filter drop-shadow-lg`} />
                             </div>
 
-                            <span className={`text-center font-bold tracking-wider leading-tight z-10 uppercase
+                            <span className={`text-center font-medium tracking-wide leading-tight z-10 
                                 ${isMobile
-                                    ? 'text-[10px] text-gray-300 truncate w-full px-1'
-                                    : 'text-[11px] text-gray-400 group-hover:text-yellow-500 group-hover:text-shadow-neon transition-colors bg-black/80 px-2 py-0.5 rounded-sm border border-transparent group-hover:border-yellow-500/30'
+                                    ? 'text-[11px] text-white truncate w-full px-1 drop-shadow-md'
+                                    : 'text-[13px] text-white drop-shadow-md px-2 py-0.5 rounded-md'
                                 }
                             `}>
                                 {app.title}
