@@ -604,3 +604,54 @@ export const recalculateSizes = async (req, res) => {
     }
 };
 
+// ===== DIRECTORY & RENAME =====
+export const createDirectory = (req, res) => {
+    try {
+        const { name, path: parentPath } = req.body;
+        const user = req.user;
+        const id = uuidv4();
+
+        const existing = db.prepare('SELECT id FROM files WHERE user_id = ? AND parent_path = ? AND name = ? AND is_deleted = 0').get(user.id, parentPath, name);
+        if (existing) return res.status(409).json({ error: 'Already exists' });
+
+        db.prepare(`
+            INSERT INTO files (id, user_id, name, parent_path, type, mime_type, size, created_at, updated_at, is_deleted, is_favorite)
+            VALUES (?, ?, ?, ?, 'directory', 'directory', 0, ?, ?, 0, 0)
+        `).run(id, user.id, name, parentPath, Date.now(), Date.now());
+
+        res.json({ status: 'ok', id, name, path: parentPath });
+    } catch (e) {
+        console.error('Create directory error:', e);
+        res.status(500).json({ error: 'Failed' });
+    }
+};
+
+export const renameFile = (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name: newName } = req.body;
+        const user = req.user;
+
+        const file = db.prepare('SELECT * FROM files WHERE id = ? AND user_id = ?').get(id, user.id);
+        if (!file) return res.status(404).json({ error: 'Not found' });
+
+        if (file.path && file.type !== 'directory') {
+            const dir = path.dirname(file.path);
+            const newPath = path.join(dir, newName);
+            try {
+                if (fs.existsSync(file.path)) fs.renameSync(file.path, newPath);
+            } catch (fsErr) {
+                console.error("FS rename error:", fsErr);
+                return res.status(500).json({ error: 'File system error' });
+            }
+            db.prepare('UPDATE files SET name = ?, path = ?, updated_at = ? WHERE id = ?').run(newName, newPath, Date.now(), id);
+        } else {
+            db.prepare('UPDATE files SET name = ?, updated_at = ? WHERE id = ?').run(newName, Date.now(), id);
+        }
+        res.json({ status: 'ok', name: newName });
+    } catch (e) {
+        console.error('Rename error:', e);
+        res.status(500).json({ error: 'Failed' });
+    }
+};
+
