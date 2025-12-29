@@ -9,7 +9,6 @@ const useOS = create((set, get) => ({
     // Desktop Icons - Configurable, defaulting to some key apps
     desktopIcons: [
         { id: 'photos', app: 'photos' },
-        { id: 'files', app: 'files' },
         { id: 'settings', app: 'settings' },
         { id: 'terminal', app: 'terminal' },
         { id: 'trash', app: 'trash' }

@@ -16,21 +16,11 @@ const WeatherApp = React.lazy(() => import('./Utility/WeatherApp'));
 const MusicPlayerApp = React.lazy(() => import('./Media/MusicPlayerApp'));
 const CalendarApp = React.lazy(() => import('./Productivity/CalendarApp'));
 const BrowserApp = React.lazy(() => import('./Utility/BrowserApp'));
-const AIApp = React.lazy(() => import('./Utility/AIApp'));
 const PdfViewerApp = React.lazy(() => import('./Utility/PdfViewerApp'));
 const StorageManagerApp = React.lazy(() => import('./System/StorageManagerApp'));
 
 export const APP_REGISTRY = {
     // 🔴 SYSTEM
-    files: {
-        id: 'files',
-        title: 'File Station',
-        icon: 'Folder',
-        category: 'System',
-        component: FileExplorerApp,
-        width: 1000,
-        height: 700
-    },
     settings: {
         id: 'settings',
         title: 'Control Panel',
@@ -172,15 +162,6 @@ export const APP_REGISTRY = {
         component: WeatherApp,
         width: 400,
         height: 500
-    },
-    ai: {
-        id: 'ai',
-        title: 'Construct AI',
-        icon: 'Bot',
-        category: 'Utility',
-        component: AIApp,
-        width: 500,
-        height: 700
     },
     pdf: {
         id: 'pdf',

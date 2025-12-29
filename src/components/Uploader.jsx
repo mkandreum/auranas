@@ -4,12 +4,19 @@ import { uploadFile } from '../lib/fileTransfer';
 import useFileSystem from '../store/useFileSystem';
 import { cn } from '../lib/utils'; // Assuming this exists, based on prev file
 
-export default function Uploader({ onClose, showCloseButton = false }) {
+export default function Uploader({ onClose, showCloseButton = false, initialFiles = [] }) {
     const { loadFiles, currentPath } = useFileSystem();
     const [queue, setQueue] = useState([]); // Upload queue
     const [isExpanded, setIsExpanded] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
+
+    // Process initial files on mount
+    useEffect(() => {
+        if (initialFiles && initialFiles.length > 0) {
+            handleFiles(initialFiles);
+        }
+    }, [initialFiles]);
 
     // Handle file selection
     const handleFiles = (fileList) => {
@@ -184,7 +191,7 @@ export default function Uploader({ onClose, showCloseButton = false }) {
                                                 <div className="flex-1 h-1 bg-black overflow-hidden rounded-full">
                                                     <div
                                                         className={`h-full transition-all duration-300 ${item.status === 'error' ? "bg-red-500" :
-                                                                item.status === 'done' ? "bg-green-500" : "bg-gradient-to-r from-yellow-500 to-red-500"
+                                                            item.status === 'done' ? "bg-green-500" : "bg-gradient-to-r from-yellow-500 to-red-500"
                                                             }`}
                                                         style={{ width: `${item.progress}%` }}
                                                     />

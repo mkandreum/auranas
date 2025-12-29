@@ -21,6 +21,9 @@ export default function PhotosApp() {
     const { files, loadFiles, setViewMode } = useFileSystem();
     const { user } = useAuth(); // We might not need logout here if OS handles it
 
+    // Upload refs
+    const fileInputRef = React.useRef(null);
+
     const [showSettings, setShowSettings] = useState(false);
     const [showSearch, setShowSearch] = useState(false);
     const [showTags, setShowTags] = useState(false);
@@ -30,6 +33,7 @@ export default function PhotosApp() {
     const [selectedAlbum, setSelectedAlbum] = useState(null);
     const [confirmModal, setConfirmModal] = useState({ open: false, title: '', message: '', onConfirm: null, type: 'warning' });
     const [showUploader, setShowUploader] = useState(false);
+    const [initialUploadFiles, setInitialUploadFiles] = useState([]);
 
     // Initial Load
     useEffect(() => {
@@ -153,6 +157,19 @@ export default function PhotosApp() {
         setSelectedFiles([]);
     };
 
+    const handleUploadClick = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleFileSelect = (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setInitialUploadFiles(e.target.files);
+            setShowUploader(true);
+        }
+    };
+
     return (
         <div className="flex h-full bg-[#0d0d0d] text-yellow-100 overflow-hidden font-mono relative">
             {showSettings && <Settings onClose={() => setShowSettings(false)} />}
@@ -203,7 +220,14 @@ export default function PhotosApp() {
                     )}
 
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setShowUploader(true)} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded" title="Upload">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleFileSelect}
+                            multiple
+                            hidden
+                        />
+                        <button onClick={handleUploadClick} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded" title="Upload">
                             <Download className="w-4 h-4 rotate-180" />
                         </button>
                         <button onClick={() => setShowTags(!showTags)} className={`p-2 transition-colors ${showTags ? 'bg-orange-500/20 text-orange-400' : 'text-slate-500 hover:text-orange-400'}`}>
@@ -248,7 +272,11 @@ export default function PhotosApp() {
 
                 {showUploader && (
                     <div className="absolute bottom-4 right-4 z-50">
-                        <Uploader onClose={() => setShowUploader(false)} showCloseButton={true} />
+                        <Uploader
+                            onClose={() => { setShowUploader(false); setInitialUploadFiles([]); }}
+                            showCloseButton={true}
+                            initialFiles={initialUploadFiles}
+                        />
                     </div>
                 )}
             </div>
