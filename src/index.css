@@ -64,340 +64,86 @@
   }
 }
 
-/* Scanlines Overlay - REMOVED per user request */
-/* body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background: repeating-linear-gradient(0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.15) 2px,
-      rgba(0, 0, 0, 0.15) 4px);
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.4;
-} */
+/* Cyberpunk 2077 HUD & UI Elements */
 
-/* CRT Flicker */
-@keyframes flicker {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  92% {
-    opacity: 0.98;
-  }
-
-  93% {
-    opacity: 0.95;
-  }
-
-  94% {
-    opacity: 1;
-  }
+/* Aggressive Grid Background */
+.cyber-grid-intense {
+  background-image:
+    linear-gradient(rgba(252, 211, 77, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(252, 211, 77, 0.1) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
 }
 
-/* Intense Glitch Effect */
-@keyframes glitch {
-  0% {
-    transform: translate(0);
-    filter: hue-rotate(0deg);
-  }
-
-  10% {
-    transform: translate(-3px, 2px);
-  }
-
-  20% {
-    transform: translate(3px, -2px);
-    filter: hue-rotate(90deg);
-  }
-
-  30% {
-    transform: translate(-2px, -1px);
-  }
-
-  40% {
-    transform: translate(2px, 2px);
-    filter: hue-rotate(180deg);
-  }
-
-  50% {
-    transform: translate(-1px, 2px);
-  }
-
-  60% {
-    transform: translate(3px, 1px);
-    filter: hue-rotate(270deg);
-  }
-
-  70% {
-    transform: translate(-2px, -2px);
-  }
-
-  80% {
-    transform: translate(2px, -1px);
-    filter: hue-rotate(360deg);
-  }
-
-  90% {
-    transform: translate(-1px, 1px);
-  }
-
-  100% {
-    transform: translate(0);
-    filter: hue-rotate(0deg);
-  }
+/* Angled Tech Borders (Desktop Only mainly) */
+.clip-tech-border {
+  clip-path: polygon(
+    0 10px, 
+    10px 0, 
+    calc(100% - 10px) 0, 
+    100% 10px, 
+    100% calc(100% - 10px), 
+    calc(100% - 10px) 100%, 
+    10px 100%, 
+    0 calc(100% - 10px)
+  );
 }
 
-.glitch:hover {
-  animation: glitch 0.4s ease infinite;
+.clip-tech-corner-tr {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
 }
 
-/* Text Glitch Effect */
-@keyframes textGlitch {
-  0% {
-    text-shadow: 2px 0 #ef4444, -2px 0 #fcd34d;
-  }
-
-  25% {
-    text-shadow: -2px 0 #ef4444, 2px 0 #fcd34d;
-  }
-
-  50% {
-    text-shadow: 2px 0 #fcd34d, -2px 0 #ef4444;
-  }
-
-  75% {
-    text-shadow: -2px 2px #ef4444, 2px -2px #fcd34d;
-  }
-
-  100% {
-    text-shadow: 2px 0 #ef4444, -2px 0 #fcd34d;
-  }
+/* Holographic Panel */
+.glass-panel-cyber {
+  background: rgba(13, 13, 13, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(252, 211, 77, 0.2);
+  box-shadow: 
+    0 4px 30px rgba(0, 0, 0, 0.5),
+    inset 0 0 20px rgba(252, 211, 77, 0.05);
 }
 
-/* Neon Glow - Yellow */
-.neon-glow {
-  text-shadow:
-    0 0 5px #fcd34d,
-    0 0 10px #fcd34d,
-    0 0 20px #fcd34d,
-    0 0 40px #f59e0b;
-}
-
-.neon-glow-red {
-  text-shadow:
-    0 0 5px #ef4444,
-    0 0 10px #ef4444,
-    0 0 20px #ef4444,
-    0 0 40px #dc2626;
-}
-
-.neon-box {
-  box-shadow:
-    0 0 5px rgba(252, 211, 77, 0.5),
-    0 0 20px rgba(252, 211, 77, 0.3),
-    inset 0 0 15px rgba(252, 211, 77, 0.1);
-}
-
-.neon-box-red {
-  box-shadow:
-    0 0 5px rgba(239, 68, 68, 0.5),
-    0 0 20px rgba(239, 68, 68, 0.3),
-    inset 0 0 15px rgba(239, 68, 68, 0.1);
-}
-
-/* Cyberpunk 2077 Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(252, 211, 77, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #fcd34d, #ef4444);
-  border-radius: 0;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #fde68a, #f87171);
-}
-
-/* Utility Classes */
-@layer utilities {
-  .text-neon-yellow {
-    color: hsl(var(--neon-yellow));
-  }
-
-  .text-neon-red {
-    color: hsl(var(--neon-red));
-  }
-
-  .text-neon-cyan {
-    color: hsl(var(--neon-cyan));
-  }
-
-  .text-neon-orange {
-    color: hsl(var(--neon-orange));
-  }
-
-  .bg-cyber-dark {
-    background: linear-gradient(135deg, #0d0d0d 0%, #1a0a0a 50%, #0d0d0d 100%);
-  }
-
-  .border-cyber {
-    border-color: rgba(252, 211, 77, 0.3);
-  }
-
-  .border-cyber-red {
-    border-color: rgba(239, 68, 68, 0.3);
-  }
-
-  .cyber-grid {
-    background-image:
-      linear-gradient(rgba(252, 211, 77, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(252, 211, 77, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-  }
-}
-
-/* Selection */
-::selection {
-  background: rgba(252, 211, 77, 0.4);
-  color: #000;
-}
-
-/* Focus Rings */
-*:focus-visible {
-  outline: 2px solid #fcd34d;
-  outline-offset: 2px;
-}
-
-/* Cyberpunk 2077 Button Style */
-.btn-cyber {
+/* Text Glitch Animation */
+.glitch-text {
   position: relative;
-  padding: 0.5rem 1.5rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  background: linear-gradient(to right, #eab308, #ca8a04);
-  border: 2px solid #facc15;
-  color: #000;
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-  transition: all 0.2s;
 }
-
-.btn-cyber:hover {
-  background: linear-gradient(to right, #ef4444, #eab308);
-  border-color: #f87171;
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
-}
-
-/* Secondary Button */
-.btn-cyber-secondary {
-  position: relative;
-  padding: 0.5rem 1.5rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  background: transparent;
-  border: 2px solid rgba(250, 204, 21, 0.5);
-  color: #facc15;
-  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-  transition: all 0.2s;
-}
-
-.btn-cyber-secondary:hover {
-  border-color: #facc15;
-  background: rgba(250, 204, 21, 0.1);
-  box-shadow: 0 0 15px rgba(252, 211, 77, 0.3);
-}
-
-/* Card with corner cuts - CP2077 style */
-.card-cyber {
-  position: relative;
-  background: rgba(0, 0, 0, 0.8);
-  border: 1px solid rgba(234, 179, 8, 0.2);
-  clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
-}
-
-.card-cyber::before {
-  content: '';
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(252, 211, 77, 0.1) 0%, transparent 50%);
-  pointer-events: none;
+  background: #0d0d0d;
+}
+.glitch-text::before {
+  left: 2px;
+  text-shadow: -1px 0 #ef4444;
+  clip: rect(24px, 550px, 90px, 0);
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+.glitch-text::after {
+  left: -2px;
+  text-shadow: -1px 0 #00f3ff;
+  clip: rect(85px, 550px, 140px, 0);
+  animation: glitch-anim 2.5s infinite linear alternate-reverse;
 }
 
-/* Diagonal stripes - Warning pattern */
-.cyber-warning {
-  background: repeating-linear-gradient(45deg,
-      transparent,
-      transparent 10px,
-      rgba(252, 211, 77, 0.1) 10px,
-      rgba(252, 211, 77, 0.1) 20px);
+@keyframes glitch-anim {
+  0% { clip: rect(12px, 9999px, 86px, 0); }
+  20% { clip: rect(84px, 9999px, 12px, 0); }
+  40% { clip: rect(32px, 9999px, 110px, 0); }
+  60% { clip: rect(6px, 9999px, 54px, 0); }
+  80% { clip: rect(96px, 9999px, 20px, 0); }
+  100% { clip: rect(64px, 9999px, 78px, 0); }
 }
-
-/* Animated border */
-@keyframes borderGlow {
-
-  0%,
-  100% {
-    border-color: rgba(252, 211, 77, 0.5);
-  }
-
-  50% {
-    border-color: rgba(239, 68, 68, 0.5);
-  }
-}
-
-.border-glow {
-  animation: borderGlow 2s ease-in-out infinite;
-}
-
-/* Loading bar animation */
-@keyframes loadingPulse {
-  0% {
-    opacity: 0.3;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.3;
-  }
-}
-
-.loading-pulse {
-  animation: loadingPulse 1.5s ease-in-out infinite;
-}
-
-/* CP2077 specific elements */
-.cp2077-header {
-  background: linear-gradient(90deg,
-      transparent 0%,
-      rgba(252, 211, 77, 0.1) 30%,
-      rgba(252, 211, 77, 0.1) 70%,
-      transparent 100%);
-}
-
-.cp2077-divider {
-  height: 1px;
-  background: linear-gradient(90deg,
-      transparent 0%,
-      #fcd34d 20%,
-      #fcd34d 80%,
-      transparent 100%);
+@keyframes glitch-anim-2 {
+  0% { clip: rect(65px, 9999px, 100px, 0); }
+  20% { clip: rect(20px, 9999px, 15px, 0); }
+  40% { clip: rect(90px, 9999px, 6px, 0); }
+  60% { clip: rect(10px, 9999px, 105px, 0); }
+  80% { clip: rect(45px, 9999px, 50px, 0); }
+  100% { clip: rect(30px, 9999px, 80px, 0); }
 }
