@@ -18,6 +18,7 @@ const CalendarApp = React.lazy(() => import('./Productivity/CalendarApp'));
 const BrowserApp = React.lazy(() => import('./Utility/BrowserApp'));
 const AIApp = React.lazy(() => import('./Utility/AIApp'));
 const PdfViewerApp = React.lazy(() => import('./Utility/PdfViewerApp'));
+const StorageManagerApp = React.lazy(() => import('./System/StorageManagerApp'));
 
 export const APP_REGISTRY = {
     // 🔴 SYSTEM
@@ -57,6 +58,15 @@ export const APP_REGISTRY = {
         width: 800,
         height: 600,
         props: { path: 'trash' }
+    },
+    storage: {
+        id: 'storage',
+        title: 'Storage Mgr',
+        icon: 'HardDrive',
+        category: 'System',
+        component: StorageManagerApp,
+        width: 900,
+        height: 650
     },
 
     // 🟡 MEDIA
