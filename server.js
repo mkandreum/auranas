@@ -23,9 +23,15 @@ import * as fileController from './controllers/fileController.js';
 import * as thumbnailController from './controllers/thumbnailController.js';
 import * as authController from './controllers/authController.js';
 import * as userController from './controllers/userController.js';
+import * as shareController from './controllers/shareController.js';
+
+// Validations
+import { validateRequest } from './middleware/validationMiddleware.js';
+import { registerSchema, loginSchema } from './validations/authValidation.js';
 
 // Middleware
 import { authMiddleware } from './middleware/auth.js';
+import errorHandler from './middleware/errorMiddleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -91,8 +97,8 @@ app.get('/api/health', (req, res) => {
 });
 
 // ===== AUTH =====
-app.post('/api/auth/register', authController.register);
-app.post('/api/auth/login', authController.login);
+app.post('/api/auth/register', validateRequest(registerSchema), authController.register);
+app.post('/api/auth/login', validateRequest(loginSchema), authController.login);
 
 // ===== FILES =====
 app.get('/api/files', authMiddleware, fileController.listFiles);
@@ -140,6 +146,11 @@ app.get('/api/upload/status/:id', authMiddleware, uploadController.getUploadStat
 // ===== THUMBNAILS =====
 app.get('/api/thumbnail', authMiddleware, thumbnailController.getThumbnail);
 
+// ===== PUBLIC SHARE =====
+app.get('/api/public/share/:token', shareController.getSharedContent);
+app.get('/api/public/share/:token/download', shareController.downloadSharedFile);
+app.get('/api/public/share/:token/thumbnail', shareController.getSharedThumbnail);
+
 // ===== ALBUMS =====
 app.get('/api/albums', authMiddleware, fileController.listAlbums);
 app.post('/api/albums', authMiddleware, fileController.createAlbum);
@@ -170,6 +181,9 @@ app.use(express.static(path.join(__dirname, 'dist')));
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
+
+// Global Error Handler
+app.use(errorHandler);
 
 async function startServer() {
     try {
@@ -207,6 +221,19 @@ async function startServer() {
         process.exit(1);
     }
 }
+
+// Global Rejection Handler
+process.on('unhandledRejection', (err) => {
+    console.log('UNHANDLED REJECTION! 💥 Shutting down...');
+    console.log(err.name, err.message);
+    process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+    console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
+    console.log(err.name, err.message);
+    process.exit(1);
+});
 
 startServer();
 
