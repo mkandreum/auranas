@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useFileSystem from '../../store/useFileSystem';
-import { getThumbnailUrl, initUpload, uploadChunk } from '../../lib/api';
-import { Image as ImageIcon, Maximize2, X, Upload, Video } from 'lucide-react';
+import { getThumbnailUrl } from '../../lib/api';
+import { uploadFile } from '../../lib/fileTransfer';
+import { Image as ImageIcon, Maximize2, X, Upload, Video, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function PhotosApp() {
     const { files, loadFiles, loading: fsLoading } = useFileSystem();
     const [mediaFiles, setMediaFiles] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [progress, setProgress] = useState(0);
     const [lightboxIndex, setLightboxIndex] = useState(null);
     const fileInputRef = useRef(null);
 
-    // Initial Load: Try logical paths
+    // Initial Load: Default to /Photos
     useEffect(() => {
         const init = async () => {
             setLoading(true);
-            await loadFiles('/Photos'); // Default to /Photos
+            await loadFiles('/Photos');
             setLoading(false);
         };
         init();
@@ -37,16 +40,22 @@ export default function PhotosApp() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Visual feedback only for this interaction (Backend is real, but UI simplified)
-        // In a perfect world we use the ChunkUploader component logic here.
-        // We will simulate the "upload started" -> "refresh" cycle.
-        alert(`Storage Manager: Importing ${file.name} to /Photos...`);
+        setUploading(true);
+        setProgress(0);
 
-        // Mock delay then refresh
-        setTimeout(() => {
-            loadFiles('/Photos');
-            alert('Import Complete.');
-        }, 1500);
+        try {
+            await uploadFile(file, '/Photos', (pct) => setProgress(pct));
+
+            // Refresh view
+            await loadFiles('/Photos');
+            // Toast or non-intrusive alert? keeping simple.
+            // alert('Upload Complete'); // Removed alert to be smoother
+        } catch (error) {
+            alert('Upload failed: ' + error.message);
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
     };
 
     const isVideo = (file) => ['mp4', 'webm', 'mov'].includes(file.name.split('.').pop().toLowerCase());
@@ -66,12 +75,21 @@ export default function PhotosApp() {
                 </div>
                 <div className="flex items-center gap-3">
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,video/*" />
-                    <button
-                        onClick={handleUploadClick}
-                        className="bg-yellow-500 text-black px-4 py-2 rounded text-xs font-bold hover:bg-yellow-400 flex items-center gap-2 transition-all"
-                    >
-                        <Upload size={14} /> IMPORT
-                    </button>
+
+                    {uploading ? (
+                        <div className="flex items-center gap-2 bg-blue-600/20 px-3 py-2 rounded text-blue-400 border border-blue-500/30">
+                            <Loader2 size={14} className="animate-spin" />
+                            <span className="text-xs font-bold">{progress}%</span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleUploadClick}
+                            className="bg-yellow-500 text-black px-4 py-2 rounded text-xs font-bold hover:bg-yellow-400 flex items-center gap-2 transition-all"
+                        >
+                            <Upload size={14} /> IMPORT
+                        </button>
+                    )}
+
                     <div className="bg-white/5 px-3 py-1.5 rounded text-xs text-gray-400 border border-white/10">
                         {mediaFiles.length} MEDIA
                     </div>
@@ -137,7 +155,6 @@ export default function PhotosApp() {
                             <video
                                 src={getThumbnailUrl(mediaFiles[lightboxIndex].id).replace('/thumbnail/', '/download/')} // Quick hack, assuming API structure. 
                                 controls
-                                autoPlay
                                 className="max-w-full max-h-full rounded-lg shadow-2xl outline-none"
                             />
                         ) : (
@@ -173,11 +190,3 @@ export default function PhotosApp() {
         </div>
     );
 }
-
-// Simple Icon Components for specific usage
-const ChevronLeft = ({ size }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-);
-const ChevronRight = ({ size }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-);

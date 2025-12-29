@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import useFileSystem from '../../store/useFileSystem';
 import useOS from '../../os/useOS';
 import FileGrid from '../../components/FileGrid';
-import { HardDrive, Folder, ChevronRight, ChevronDown, RefreshCw, Home } from 'lucide-react';
+import { HardDrive, Folder, ChevronRight, ChevronDown, RefreshCw, Home, Loader2 } from 'lucide-react';
+import { uploadFile } from '../../lib/fileTransfer';
 
 export default function FileExplorerApp() {
     const { loadFiles, files, currentPath, navigateUp, loading } = useFileSystem();
-    const { openWindow } = useOS(); // Need useOS to open other apps
+    const { openWindow } = useOS();
+    const [uploading, setUploading] = useState(false);
+    const [progress, setProgress] = useState(0);
+
+    // Initial load handled by store? Actually component should trigger load.
+    useEffect(() => {
+        loadFiles(currentPath);
+    }, [currentPath]);
 
     const handleFileClick = (file) => {
         if (file.type === 'directory') {
@@ -17,7 +25,7 @@ export default function FileExplorerApp() {
 
             // File Associations
             if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-                openWindow('photos', { title: file.name, params: { file } }); // Pass file param if PhotosApp supported it
+                openWindow('photos', { title: file.name, params: { file } });
             } else if (['mp3', 'wav', 'ogg'].includes(ext)) {
                 openWindow('music', { title: 'Sonic Wave', params: { file } });
             } else if (['mp4', 'mkv', 'webm'].includes(ext)) {
@@ -37,22 +45,17 @@ export default function FileExplorerApp() {
         if (!file) return;
 
         setUploading(true);
-        // Simple upload for now - in production use chunked upload from api.js
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', currentPath);
+        setProgress(0);
 
         try {
-            // Using direct upload endpoint if available or assume api.uploadChunk handles it
-            // api.js uses /upload endpoint. Let's make a direct call or use a simple helper
-            // For now, let's mock the success to UI but try to actually call the API if we had a clean one-shot
-            // Given api.js structure, let's just refresh for now
-            alert("Upload functionality requires connecting the specific upload logic. Refreshing view.");
-            loadFiles(currentPath);
+            await uploadFile(file, currentPath, (pct) => setProgress(pct));
+            await loadFiles(currentPath);
         } catch (error) {
             console.error(error);
+            alert("Upload failed: " + error.message);
         } finally {
             setUploading(false);
+            e.target.value = ''; // Reset input
         }
     };
 
@@ -71,11 +74,20 @@ export default function FileExplorerApp() {
                     <span className="text-yellow-500">NAS://</span>
                     <span>{currentPath}</span>
                 </div>
-                <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded cursor-pointer flex items-center gap-2">
-                    <span className="text-xs font-bold">{uploading ? '...' : 'Upload'}</span>
-                    <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
-                </label>
-                <button onClick={() => loadFiles(currentPath)} className="p-1.5 hover:bg-white/10 rounded">
+
+                {uploading ? (
+                    <div className="flex items-center gap-2 bg-blue-600 px-3 py-1 rounded text-white text-xs font-bold">
+                        <Loader2 size={12} className="animate-spin" />
+                        {progress}%
+                    </div>
+                ) : (
+                    <label className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded cursor-pointer flex items-center gap-2 transition-colors">
+                        <span className="text-xs font-bold">Upload</span>
+                        <input type="file" className="hidden" onChange={handleUpload} />
+                    </label>
+                )}
+
+                <button onClick={() => loadFiles(currentPath)} className="p-1.5 hover:bg-white/10 rounded transition-colors">
                     <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                 </button>
             </div>
@@ -83,10 +95,15 @@ export default function FileExplorerApp() {
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar Tree */}
                 <div className="w-56 bg-[#252526] border-r border-[#3e3e42] flex flex-col py-2 select-none hidden md:flex">
-                    {/* ... (keep existing tree items or dynamic) ... */}
-                    <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Favorites</div>
-                    <div onClick={() => loadFiles('/')} className="px-4 py-1 hover:bg-white/5 cursor-pointer flex items-center gap-2 cursor-pointer">
-                        <Home size={14} /> Home
+                    <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Storage</div>
+                    <div onClick={() => loadFiles('/')} className="px-4 py-1 hover:bg-white/5 cursor-pointer flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white">
+                        <Home size={14} /> Root
+                    </div>
+                    <div onClick={() => loadFiles('/Photos')} className="px-4 py-1 hover:bg-white/5 cursor-pointer flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white">
+                        <Folder size={14} /> Photos
+                    </div>
+                    <div onClick={() => loadFiles('/Documents')} className="px-4 py-1 hover:bg-white/5 cursor-pointer flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white">
+                        <Folder size={14} /> Documents
                     </div>
                 </div>
 
@@ -94,7 +111,7 @@ export default function FileExplorerApp() {
                 <div className="flex-1 bg-[#1e1e1e] relative flex flex-col overflow-hidden">
                     <FileGrid
                         onFileClick={handleFileClick}
-                        files={files} // FileGrid expects data from store usually, but we can pass it if modified
+                        files={files}
                     />
                 </div>
             </div>
