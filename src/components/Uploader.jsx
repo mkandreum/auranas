@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { UploadCloud, CheckCircle, AlertCircle, X, FolderOpen, Pause, Play, Trash2 } from 'lucide-react';
-import { uploadChunk, initUpload } from '../lib/api';
+import { uploadFile } from '../lib/fileTransfer';
 import useFileSystem from '../store/useFileSystem';
-import { cn } from '../lib/utils';
+import { cn } from '../lib/utils'; // Assuming this exists, based on prev file
 
 export default function Uploader({ onClose, showCloseButton = false }) {
-    const { loadFiles } = useFileSystem();
+    const { loadFiles, currentPath } = useFileSystem();
     const [queue, setQueue] = useState([]); // Upload queue
     const [isExpanded, setIsExpanded] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
-
-    const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
 
     // Handle file selection
     const handleFiles = (fileList) => {
@@ -21,7 +19,7 @@ export default function Uploader({ onClose, showCloseButton = false }) {
             name: file.name,
             size: file.size,
             progress: 0,
-            status: 'pending', // pending, uploading, done, error, paused
+            status: 'pending',
         }));
         setQueue(prev => [...prev, ...files]);
         setIsExpanded(true);
@@ -30,45 +28,41 @@ export default function Uploader({ onClose, showCloseButton = false }) {
     // Start/resume uploading
     useEffect(() => {
         const processQueue = async () => {
+            if (isUploading) return;
             const next = queue.find(f => f.status === 'pending');
-            if (!next || isUploading) return;
+            if (!next) return;
 
             setIsUploading(true);
+
+            // Mark as uploading
             setQueue(q => q.map(f => f.id === next.id ? { ...f, status: 'uploading' } : f));
 
             try {
-                const totalChunks = Math.ceil(next.size / CHUNK_SIZE);
+                // Use robust uploadFile utility
+                // Default to currentPath, or specific path if provided in props (not currently passed)
+                // PhotosApp might expect upload to /Photos? 
+                // Ideally Uploader should take a 'targetPath' prop.
+                // If not provided, use currentPath from store.
+                // But PhotosApp keeps store at '/', and just filters. So uploading to / is fine? 
+                // Or does PhotosApp navigate to /Photos? 
 
-                for (let i = 0; i < totalChunks; i++) {
-                    const start = i * CHUNK_SIZE;
-                    const end = Math.min(next.size, start + CHUNK_SIZE);
-                    const chunk = next.file.slice(start, end);
-
-                    const formData = new FormData();
-                    formData.append('chunk', chunk);
-                    formData.append('fileName', next.name);
-                    formData.append('chunkIndex', i);
-                    formData.append('totalChunks', totalChunks);
-                    formData.append('fileId', next.id);
-
-                    await uploadChunk(formData);
-
-                    const progress = Math.round(((i + 1) / totalChunks) * 100);
+                // Let's assume currentPath is correct context.
+                await uploadFile(next.file, currentPath || '/', (progress) => {
                     setQueue(q => q.map(f => f.id === next.id ? { ...f, progress } : f));
-                }
+                });
 
                 setQueue(q => q.map(f => f.id === next.id ? { ...f, status: 'done', progress: 100 } : f));
-                loadFiles('/');
+                loadFiles(currentPath || '/');
             } catch (error) {
                 console.error('Upload error:', error);
                 setQueue(q => q.map(f => f.id === next.id ? { ...f, status: 'error' } : f));
+            } finally {
+                setIsUploading(false); // Trigger effect again for next file
             }
-
-            setIsUploading(false);
         };
 
         processQueue();
-    }, [queue, isUploading]);
+    }, [queue, isUploading, currentPath, loadFiles]);
 
     // Remove from queue
     const removeFromQueue = (id) => {
@@ -105,6 +99,7 @@ export default function Uploader({ onClose, showCloseButton = false }) {
         }
     };
 
+    // ... (UI remains largely the same, just keeping it consistent)
     return (
         <>
             {/* Drag overlay */}
@@ -149,7 +144,6 @@ export default function Uploader({ onClose, showCloseButton = false }) {
             <div className={showCloseButton ? "w-full max-w-md" : "fixed bottom-24 lg:bottom-6 right-6 z-50"}>
                 {!hasQueue ? (
                     <label
-                        onDragEnter={handleDrag}
                         className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-red-500 text-black p-4 shadow-lg shadow-yellow-500/30 transition-all hover:scale-110 active:scale-95 flex items-center gap-2 cursor-pointer"
                         style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}
                     >
@@ -162,7 +156,7 @@ export default function Uploader({ onClose, showCloseButton = false }) {
                         />
                     </label>
                 ) : (
-                    <div className="bg-black border border-yellow-500/30 shadow-2xl overflow-hidden w-96" style={{ clipPath: 'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)' }}>
+                    <div className="bg-black border border-yellow-500/30 shadow-2xl overflow-hidden w-96 rounded-lg font-mono">
                         {/* Header */}
                         <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-3 flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -181,29 +175,27 @@ export default function Uploader({ onClose, showCloseButton = false }) {
 
                         {/* Queue list */}
                         {isExpanded && (
-                            <div className="max-h-64 overflow-auto">
+                            <div className="max-h-64 overflow-auto bg-[#111]">
                                 {queue.map((item) => (
-                                    <div key={item.id} className="px-4 py-2 border-t border-yellow-500/10 flex items-center gap-3">
+                                    <div key={item.id} className="px-4 py-2 border-t border-white/5 flex items-center gap-3">
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm text-yellow-100 truncate font-mono">{item.name}</p>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <div className="flex-1 h-1 bg-black overflow-hidden">
+                                                <div className="flex-1 h-1 bg-black overflow-hidden rounded-full">
                                                     <div
-                                                        className={cn(
-                                                            "h-full transition-all duration-300",
-                                                            item.status === 'error' ? "bg-red-500" :
+                                                        className={`h-full transition-all duration-300 ${item.status === 'error' ? "bg-red-500" :
                                                                 item.status === 'done' ? "bg-green-500" : "bg-gradient-to-r from-yellow-500 to-red-500"
-                                                        )}
+                                                            }`}
                                                         style={{ width: `${item.progress}%` }}
                                                     />
                                                 </div>
-                                                <span className="text-xs text-yellow-500/50 w-10 font-mono">{item.progress}%</span>
+                                                <span className="text-xs text-yellow-500/50 w-10 font-mono text-right">{item.progress}%</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             {item.status === 'done' && <CheckCircle className="w-4 h-4 text-green-400" />}
                                             {item.status === 'error' && <AlertCircle className="w-4 h-4 text-red-400" />}
-                                            <button onClick={() => removeFromQueue(item.id)} className="p-1 hover:bg-yellow-500/20 text-yellow-500/50">
+                                            <button onClick={() => removeFromQueue(item.id)} className="p-1 hover:bg-white/10 text-gray-500">
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -213,7 +205,7 @@ export default function Uploader({ onClose, showCloseButton = false }) {
                         )}
 
                         {/* Add more button */}
-                        <label className="block px-4 py-2 border-t border-yellow-500/20 text-center text-yellow-400 hover:bg-yellow-500/10 cursor-pointer text-sm font-mono uppercase">
+                        <label className="block px-4 py-2 border-t border-white/10 text-center text-yellow-400 hover:bg-yellow-500/10 cursor-pointer text-sm font-mono uppercase bg-[#0a0a0a]">
                             + Add more files
                             <input type="file" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
                         </label>
@@ -223,4 +215,3 @@ export default function Uploader({ onClose, showCloseButton = false }) {
         </>
     );
 }
-
