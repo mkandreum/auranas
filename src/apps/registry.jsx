@@ -13,16 +13,10 @@ const NotesApp = React.lazy(() => import('./Productivity/NotesApp'));
 const TerminalApp = React.lazy(() => import('./Utility/TerminalApp'));
 const ResourceMonitorApp = React.lazy(() => import('./Utility/ResourceMonitorApp'));
 const WeatherApp = React.lazy(() => import('./Utility/WeatherApp'));
-
-// Placeholder Apps (To be implemented)
-// We'll use a generic placeholder for now for the expanded list
-const PlaceholderApp = ({ title }) => (
-    <div className="flex items-center justify-center h-full bg-[#111] text-gray-400 flex-col font-mono">
-        <LucideIcons.Construction size={48} className="mb-4 text-yellow-500 animate-pulse" />
-        <h1 className="text-xl text-yellow-500">{title}</h1>
-        <p className="text-sm mt-2 opacity-50">UNDER CONSTRUCTION</p>
-    </div>
-);
+const MusicPlayerApp = React.lazy(() => import('./Media/MusicPlayerApp'));
+const CalendarApp = React.lazy(() => import('./Productivity/CalendarApp'));
+const BrowserApp = React.lazy(() => import('./Utility/BrowserApp'));
+const AIApp = React.lazy(() => import('./Utility/AIApp'));
 
 export const APP_REGISTRY = {
     // 🔴 SYSTEM
@@ -88,7 +82,7 @@ export const APP_REGISTRY = {
         title: 'Sonic Wave',
         icon: 'Music',
         category: 'Media',
-        component: () => <PlaceholderApp title="Sonic Wave" />,
+        component: MusicPlayerApp,
         width: 400,
         height: 600
     },
@@ -126,7 +120,7 @@ export const APP_REGISTRY = {
         title: 'Time Sync',
         icon: 'Calendar',
         category: 'Productivity',
-        component: () => <PlaceholderApp title="Time Sync" />,
+        component: CalendarApp,
         width: 800,
         height: 600
     },
@@ -155,7 +149,7 @@ export const APP_REGISTRY = {
         title: 'Browser',
         icon: 'Globe',
         category: 'Utility',
-        component: () => <PlaceholderApp title="Internal Browser" />,
+        component: BrowserApp,
         width: 1000,
         height: 700
     },
@@ -173,7 +167,7 @@ export const APP_REGISTRY = {
         title: 'Construct AI',
         icon: 'Bot',
         category: 'Utility',
-        component: () => <PlaceholderApp title="Construct AI" />,
+        component: AIApp,
         width: 500,
         height: 700
     }
