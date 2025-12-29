@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { X, Minus, Square, Maximize2, Loader2 } from 'lucide-react';
 import useOS from './useOS';
-import { APP_REGISTRY } from '../apps/registry';
+import { APP_REGISTRY } from '../apps/registry.jsx';
 import * as LucideIcons from 'lucide-react';
 import 'react-resizable/css/styles.css';
 

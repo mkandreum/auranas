@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import useOS from './useOS';
 import useAuth from '../store/useAuth';
-import { getAllApps } from '../apps/registry';
+import { getAllApps } from '../apps/registry.jsx';
 import * as LucideIcons from 'lucide-react';
 import { Search, LogOut, Power } from 'lucide-react';
 

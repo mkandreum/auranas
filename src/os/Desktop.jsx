@@ -4,7 +4,7 @@ import useOS from './useOS';
 import Window from './Window';
 import Taskbar from './Taskbar';
 import * as LucideIcons from 'lucide-react';
-import { getApp } from '../apps/registry';
+import { getApp } from '../apps/registry.jsx';
 
 export default function Desktop() {
     const { windows, desktopIcons, openWindow, updateWindowPosition } = useOS();
