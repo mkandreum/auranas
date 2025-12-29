@@ -1,21 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle } from 'lucide-react';
-import { getDownloadUrl } from '../../lib/api';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Shuffle, Music } from 'lucide-react';
+import { getDownloadUrl, fetchFiles, getThumbnailUrl } from '../../lib/api';
 
 export default function MusicPlayerApp({ file }) {
-    const [playlist, setPlaylist] = useState(
-        file ? [{
-            id: file.id,
-            title: file.name.replace(/\.[^/.]+$/, ""),
-            artist: 'Unknown Artist',
-            src: getDownloadUrl(file.id),
-            cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop'
-        }] : [
-            { id: 1, title: 'Neon Nights', artist: 'CyberWave', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop' },
-            { id: 2, title: 'Digital Rain', artist: 'Glitch Mob', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', cover: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=300&h=300&fit=crop' },
-        ]
-    );
-
+    const [playlist, setPlaylist] = useState([]);
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
     const [playing, setPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -24,17 +12,67 @@ export default function MusicPlayerApp({ file }) {
     const [isMuted, setIsMuted] = useState(false);
     const [shuffle, setShuffle] = useState(false);
     const [repeat, setRepeat] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const audioRef = useRef(null);
     const currentTrack = playlist[currentTrackIndex];
 
     useEffect(() => {
-        if (playing) {
-            audioRef.current?.play().catch(e => console.error("Play error:", e));
-        } else {
-            audioRef.current?.pause();
+        const loadMusic = async () => {
+            setLoading(true);
+            try {
+                if (file) {
+                    setPlaylist([{
+                        id: file.id,
+                        title: file.name,
+                        artist: 'Unknown Artist',
+                        src: getDownloadUrl(file.id),
+                        cover: getThumbnailUrl(file.path)
+                    }]);
+                } else {
+                    // Try to load from /Music first
+                    let files = [];
+                    try {
+                        const res = await fetchFiles('/Music');
+                        files = res.files;
+                    } catch {
+                        // If /Music doesn't exist, try root
+                        const res = await fetchFiles('/');
+                        files = res.files;
+                    }
+
+                    const audioFiles = files.filter(f => f.name.match(/\.(mp3|wav|ogg|m4a|flac)$/i)).map(f => ({
+                        id: f.id,
+                        title: f.name,
+                        artist: 'Unknown Artist',
+                        src: getDownloadUrl(f.id),
+                        cover: getThumbnailUrl(f.path)
+                    }));
+
+                    if (audioFiles.length > 0) {
+                        setPlaylist(audioFiles);
+                    } else {
+                        // Fallback sample if absolutely nothing found, to show UI
+                        setPlaylist([]);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load music:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadMusic();
+    }, [file]);
+
+    useEffect(() => {
+        if (playing && audioRef.current) {
+            audioRef.current.play().catch(e => {
+                console.warn("Autoplay blocked or failed", e);
+                setPlaying(false);
+            });
         }
-    }, [playing, currentTrackIndex]);
+    }, [currentTrackIndex, playing]);
 
     const updateProgress = () => {
         if (audioRef.current) {
@@ -61,11 +99,13 @@ export default function MusicPlayerApp({ file }) {
     const togglePlay = () => setPlaying(!playing);
 
     const nextTrack = () => {
+        if (playlist.length <= 1) return;
         setCurrentTrackIndex((prev) => (prev + 1) % playlist.length);
         setPlaying(true);
     };
 
     const prevTrack = () => {
+        if (playlist.length <= 1) return;
         setCurrentTrackIndex((prev) => (prev - 1 + playlist.length) % playlist.length);
         setPlaying(true);
     };
@@ -77,11 +117,25 @@ export default function MusicPlayerApp({ file }) {
     };
 
     const formatTime = (seconds) => {
-        if (!seconds) return "0:00";
+        if (!seconds || isNaN(seconds)) return "0:00";
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
+
+    if (loading) return (
+        <div className="h-full flex items-center justify-center bg-black text-cyan-500 font-mono">
+            LOADING LIBRARY...
+        </div>
+    );
+
+    if (playlist.length === 0) return (
+        <div className="h-full flex flex-col items-center justify-center bg-black text-gray-500 font-mono p-6 text-center">
+            <Music size={48} className="mb-4 opacity-50" />
+            <h3 className="text-xl mb-2">No Audio Files Found</h3>
+            <p className="text-sm">Upload .mp3 or .wav files to your /Music folder.</p>
+        </div>
+    );
 
     return (
         <div className="h-full flex flex-col bg-gradient-to-br from-purple-900 via-black to-blue-900 text-white font-mono overflow-hidden">
@@ -101,11 +155,19 @@ export default function MusicPlayerApp({ file }) {
                 </div>
 
                 <div className={`relative w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-cyan-500/30 overflow-hidden shadow-[0_0_30px_rgba(34,211,238,0.3)] ${playing ? 'animate-[spin_10s_linear_infinite]' : ''}`}>
-                    <img
-                        src={currentTrack.cover}
-                        alt="Album Art"
-                        className="w-full h-full object-cover"
-                    />
+                    {currentTrack.cover ? (
+                        <img
+                            src={currentTrack.cover}
+                            alt="Album Art"
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                        />
+                    ) : null}
+                    {/* Fallback pattern */}
+                    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center" style={{ display: currentTrack.cover ? 'none' : 'flex' }}>
+                        <Music size={64} className="text-cyan-500/50" />
+                    </div>
+
                     <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-cyan-500/20 mix-blend-overlay"></div>
                     {/* Vinyl hole */}
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-black rounded-full border border-gray-700"></div>
@@ -169,7 +231,7 @@ export default function MusicPlayerApp({ file }) {
                     <input
                         type="range" min="0" max="1" step="0.05"
                         value={isMuted ? 0 : volume}
-                        onChange={(e) => { setVolume(e.target.value); audioRef.current.volume = e.target.value; setIsMuted(e.target.value === '0'); }}
+                        onChange={(e) => { setVolume(e.target.value); if (audioRef.current) audioRef.current.volume = e.target.value; setIsMuted(e.target.value === '0'); }}
                         className="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                     />
                 </div>

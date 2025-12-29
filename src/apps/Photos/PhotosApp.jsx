@@ -225,9 +225,20 @@ export default function PhotosApp() {
                             ref={fileInputRef}
                             onChange={handleFileSelect}
                             multiple
-                            hidden
+                            style={{ display: 'none' }}
                         />
-                        <button onClick={handleUploadClick} className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded" title="Upload">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation(); // Prevent bubbling
+                                console.log("Upload clicked, input ref:", fileInputRef.current);
+                                if (fileInputRef.current) {
+                                    fileInputRef.current.value = ''; // Reset to allow selecting same file again
+                                    fileInputRef.current.click();
+                                }
+                            }}
+                            className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded"
+                            title="Upload"
+                        >
                             <Download className="w-4 h-4 rotate-180" />
                         </button>
                         <button onClick={() => setShowTags(!showTags)} className={`p-2 transition-colors ${showTags ? 'bg-orange-500/20 text-orange-400' : 'text-slate-500 hover:text-orange-400'}`}>
