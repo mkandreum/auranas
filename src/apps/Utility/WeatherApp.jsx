@@ -50,13 +50,16 @@ export default function WeatherApp() {
                 </div>
 
                 <div className="flex justify-between border-t border-white/10 pt-4">
-                    {forecast.map((d, i) => (
-                        <div key={i} className="flex flex-col items-center gap-2">
-                            <span className="text-xs text-gray-400 font-bold">{d.day}</span>
-                            <d.icon size={24} className="text-gray-300" />
-                            <span className="font-bold">{d.temp}°</span>
-                        </div>
-                    ))}
+                    {forecast.map((d, i) => {
+                        const IconComponent = d.icon;
+                        return (
+                            <div key={i} className="flex flex-col items-center gap-2">
+                                <span className="text-xs text-gray-400 font-bold">{d.day}</span>
+                                <IconComponent size={24} className="text-gray-300" />
+                                <span className="font-bold">{d.temp}°</span>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
