@@ -21,6 +21,17 @@ This guide explains how to deploy AuraNAS on Coolify using the included Dockerfi
 - **Build Context**: `.` (root directory)
 - **Port**: `5000`
 
+### 2a. Alternative: Docker Compose (Recommended)
+
+If you prefer using Docker Compose:
+
+1. In Coolify, go to **Settings** > **Build Pack**
+2. Select **Docker Compose**
+3. Ensure **Docker Compose Location** is `./docker-compose.yml`
+4. **IMPORTANT**: When using Docker Compose in Coolify, **volumes are essential**.
+   - Coolify will automatically recognize the volumes defined in `docker-compose.yml` (`auranas_storage`, `auranas_cache`, `auranas_data`).
+   - You **must** still ensure they are listed in the Storage tab if they don't appear automatically.
+
 ### 3. Environment Variables
 
 Add the following environment variables in Coolify:
