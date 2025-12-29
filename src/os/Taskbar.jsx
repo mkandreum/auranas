@@ -1,105 +1,146 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import useOS from './useOS';
-import StartMenu from './StartMenu';
+import { getApp } from '../apps/registry.jsx';
 import * as LucideIcons from 'lucide-react';
-import { format } from 'date-fns';
+import { Calendar, Wifi, Volume2, Battery, ChevronUp } from 'lucide-react';
 
-export default function Taskbar() {
-    const { windows, activeWindowId, minimizeWindow, restoreWindow, focusWindow } = useOS();
-    const [time, setTime] = useState(new Date());
-    const [startMenuOpen, setStartMenuOpen] = useState(false);
-
-    useEffect(() => {
+const Clock = () => {
+    const [time, setTime] = React.useState(new Date());
+    React.useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
-        const handleClickOutside = () => setStartMenuOpen(false);
-        window.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            clearInterval(timer);
-            window.removeEventListener('mousedown', handleClickOutside);
-        };
+        return () => clearInterval(timer);
     }, []);
 
-    const handleTaskClick = (win) => {
-        if (win.isMinimized) {
-            restoreWindow(win.id);
-        } else if (activeWindowId === win.id) {
-            minimizeWindow(win.id);
+    return (
+        <div className="flex flex-col items-end leading-none">
+            <span className="text-lg font-bold text-yellow-500 tracking-wider">
+                {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <span className="text-[10px] text-yellow-500/60 uppercase">
+                {time.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }).replace(',', '')}
+            </span>
+        </div>
+    );
+};
+
+export default function Taskbar() {
+    const { windows, openWindow, minimizeWindow, focusWindow } = useOS();
+    const [startOpen, setStartOpen] = useState(false);
+
+    // Get unique active apps
+    const activeApps = [...new Set(windows.map(w => w.app))].map(appId => {
+        const window = windows.find(w => w.app === appId);
+        return { appId, windowId: window.id, isMinimized: window.isMinimized, isActive: !window.isMinimized };
+    });
+
+    const handleAppClick = (appId) => {
+        const appWindows = windows.filter(w => w.app === appId);
+        if (appWindows.length === 0) {
+            const app = getApp(appId);
+            if (app) openWindow(appId, app);
         } else {
-            focusWindow(win.id);
+            const active = appWindows.find(w => !w.isMinimized);
+            if (active) {
+                // If active and focused, minimize. If active but not on top, focus.
+                // Simple logic: Toggle minimize/focus
+                // Ideally we check z-index but let's just toggle
+                minimizeWindow(active.id);
+            } else {
+                // Restore logic needs to become maximizing or un-minimizing
+                // Currently 'focusWindow' brings to front, but if minimized we need to unminimize manually in useOS?
+                // Assuming focusWindow handles restore or use specific restore function
+                // Let's use focusWindow as generic "Activate"
+                focusWindow(appWindows[0].id);
+            }
         }
     };
 
     return (
-        <div className="absolute bottom-0 left-0 right-0 h-12 bg-[#0a0a0a]/95 border-t border-yellow-500/20 backdrop-blur-md flex items-center px-2 z-[1000] justify-between">
-            {/* Start Button */}
-            <div className="flex items-center" onMouseDown={e => e.stopPropagation()}>
-                {startMenuOpen && <StartMenu onClose={() => setStartMenuOpen(false)} />}
+        <>
+            {/* Taskbar Container - Floating Dock Style */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-auto min-w-[300px] max-w-[95vw] h-16 z-50 flex items-end justify-center">
 
-                <button
-                    onClick={() => setStartMenuOpen(!startMenuOpen)}
-                    className={`w-10 h-10 flex items-center justify-center rounded hover:bg-white/10 mr-4 group relative start-button ${startMenuOpen ? 'bg-white/10' : ''}`}
-                >
-                    <LucideIcons.Command size={24} className="text-yellow-500 group-hover:rotate-90 transition-transform duration-300" />
-                    <div className="absolute inset-0 bg-yellow-500/20 blur opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                </button>
+                {/* Main Dock */}
+                <div className="
+                    h-14 px-4 flex items-center gap-2 
+                    bg-[#0a0a0a]/90 backdrop-blur-xl 
+                    border border-yellow-500/30 
+                    clip-tech-border
+                    shadow-[0_0_20px_rgba(252,211,77,0.15)]
+                    relative
+                ">
+                    {/* Background Detail */}
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
 
+                    {/* Start Button Area (Left) */}
+                    <div className="mr-4 flex items-center">
+                        <button
+                            className="group relative w-10 h-10 flex items-center justify-center hover:bg-yellow-500/10 transition-all clip-path-[polygon(20%_0,100%_0,100%_100%,0%_100%,0%_20%)]"
+                            onClick={() => setStartOpen(!startOpen)}
+                        >
+                            <div className="absolute inset-0 border border-yellow-500/30 group-hover:border-yellow-500/80 transition-colors"></div>
+                            <div className="w-1.5 h-1.5 bg-yellow-500 rounded-sm grid place-items-center group-hover:rotate-45 transition-transform"></div>
+                            <div className="absolute top-0 right-0 w-1 h-1 bg-yellow-500"></div>
+                        </button>
+                    </div>
 
-                {/* Open Apps List */}
-                <div className="flex items-center gap-1">
-                    {windows.map(win => {
-                        const Icon = LucideIcons[win.icon] || LucideIcons.AppWindow;
-                        const isActive = activeWindowId === win.id && !win.isMinimized;
-                        return (
-                            <button
-                                key={win.id}
-                                onClick={() => handleTaskClick(win)}
-                                className={`
-                                    h-10 px-3 flex items-center gap-2 rounded transition-all relative overflow-hidden group min-w-[140px] max-w-[200px]
-                                    ${isActive ? 'bg-white/10 border-b-2 border-yellow-500' : 'hover:bg-white/5 opacity-70 hover:opacity-100'}
-                                `}
-                            >
-                                <Icon size={16} className={`${isActive ? 'text-yellow-500' : 'text-gray-400'}`} />
-                                <span className={`text-xs truncate ${isActive ? 'text-white' : 'text-gray-400'}`}>
-                                    {win.title}
-                                </span>
-                                {isActive && <div className="absolute inset-0 bg-yellow-500/5 pointer-events-none"></div>}
-                            </button>
-                        )
-                    })}
+                    {/* Active Apps Dock */}
+                    <div className="flex items-center gap-3">
+                        {activeApps.map(({ appId, windowId, isMinimized, isActive }) => {
+                            const app = getApp(appId);
+                            if (!app) return null;
+                            const Icon = LucideIcons[app.icon] || LucideIcons.AppWindow;
+
+                            return (
+                                <button
+                                    key={appId}
+                                    onClick={() => focusWindow(windowId)} // Simplified click
+                                    className={`
+                                        group relative w-10 h-10 flex items-center justify-center 
+                                        transition-all duration-300
+                                        ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}
+                                    `}
+                                >
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-yellow-500/20 blur-md rounded-full animate-pulse"></div>
+                                    )}
+                                    <div className={`p-2 rounded bg-black/50 border ${isActive ? 'border-yellow-500 text-yellow-500' : 'border-white/10 text-gray-400 group-hover:text-white group-hover:border-white/30'} clip-tech-border transition-colors`}>
+                                        <Icon size={20} />
+                                    </div>
+
+                                    {/* Active Indicator */}
+                                    {isActive && <div className="absolute -bottom-1 w-8 h-0.5 bg-yellow-500 shadow-[0_0_5px_#eab308]"></div>}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Separator */}
+                    <div className="w-px h-8 bg-white/10 mx-2"></div>
+
+                    {/* System Tray (Right) */}
+                    <div className="flex items-center gap-3 pl-2">
+                        <div className="flex items-center gap-2 text-yellow-500/80">
+                            <Wifi size={14} />
+                            <Volume2 size={14} />
+                            <Battery size={14} />
+                        </div>
+                        <div className="h-8 w-px bg-white/10"></div>
+                        <Clock />
+                    </div>
                 </div>
+
+                {/* Decorative Bottom Line */}
+                <div className="absolute bottom-[-10px] w-[80%] h-1 bg-yellow-500/20 rounded-full blur-sm"></div>
             </div>
 
-            {/* System Tray */}
-            <div className="flex items-center gap-4 px-2">
-                {/* Stats */}
-                <div className="hidden md:flex items-center gap-3 text-[10px] text-yellow-500/60 font-mono">
-                    <div className="flex flex-col items-end leading-none">
-                        <span>CPU 12%</span>
-                        <div className="w-12 h-1 bg-gray-800 rounded-full mt-0.5"><div className="w-[12%] h-full bg-yellow-500/50 rounded-full"></div></div>
-                    </div>
-                    <div className="flex flex-col items-end leading-none">
-                        <span>RAM 4.2GB</span>
-                        <div className="w-12 h-1 bg-gray-800 rounded-full mt-0.5"><div className="w-[45%] h-full bg-cyan-500/50 rounded-full"></div></div>
-                    </div>
+            {/* Start Menu Overlay (Placeholder if needed someday) */}
+            {startOpen && (
+                <div className="absolute bottom-20 left-4 w-64 h-80 bg-black/90 border border-yellow-500/30 clip-tech-border backdrop-blur-xl p-4 z-50 flex flex-col items-center justify-center text-yellow-500 font-mono">
+                    <div className="text-xl font-bold mb-4 glitch-text" data-text="AURA.OS">AURA.OS</div>
+                    <div className="text-xs text-yellow-500/50">SYSTEM MENU UNDER CONSTRUCTION</div>
                 </div>
-
-                <div className="h-6 w-px bg-white/10 mx-2"></div>
-
-                {/* Clock */}
-                <div className="flex flex-col items-end text-right mr-2 cursor-default group">
-                    <span className="text-sm font-bold text-yellow-100 group-hover:text-yellow-500 transition-colors">
-                        {format(time, 'HH:mm')}
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                        {format(time, 'MMM dd, yyyy')}
-                    </span>
-                </div>
-
-                <button className="p-2 hover:bg-white/10 rounded-full relative">
-                    <LucideIcons.Bell size={18} className="text-gray-400" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                </button>
-            </div>
-        </div>
+            )}
+        </>
     );
 }
