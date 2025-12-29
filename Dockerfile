@@ -12,8 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build frontend (Vite builds to dist)
-RUN npm run build
+# Set Node memory limit and build frontend
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN npm run build -- --logLevel=info
 
 # Production Stage
 FROM node:20-alpine
