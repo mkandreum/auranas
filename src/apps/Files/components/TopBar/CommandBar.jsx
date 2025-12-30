@@ -29,7 +29,7 @@ export default function CommandBar({
                 <ToolbarButton icon={FolderPlus} label="New Folder" onClick={onCreateFolder} primary />
                 <div className="relative">
                     <ToolbarButton icon={FilePlus} label={uploading ? `${progress}%` : "Upload"} onClick={() => fileInputRef.current?.click()} />
-                    <input ref={fileInputRef} type="file" className="hidden" onChange={onUpload} />
+                    <input ref={fileInputRef} type="file" multiple className="hidden" onChange={onUpload} />
                     {uploading && <div className="absolute bottom-0 left-0 h-0.5 bg-cyan-400 transition-all" style={{ width: `${progress}%` }} />}
                 </div>
             </div>

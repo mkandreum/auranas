@@ -9,10 +9,13 @@ import StatusBar from './components/StatusBar';
 
 import ContextMenu from './components/FileList/ContextMenu';
 
+import { UploadCloud } from 'lucide-react';
+
 export default function FileExplorerApp({ initialPath = '/' }) {
     const explorer = useFileExplorer(initialPath);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [contextMenu, setContextMenu] = useState(null); // { x, y, file }
+    const [isDragging, setIsDragging] = useState(false);
 
     const handleContextMenu = (e, file) => {
         e.preventDefault();
@@ -21,6 +24,24 @@ export default function FileExplorerApp({ initialPath = '/' }) {
             y: e.clientY,
             file
         });
+    };
+
+    const onDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const onDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const onDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            explorer.handleUpload(e.dataTransfer.files);
+        }
     };
 
     return (
@@ -34,7 +55,7 @@ export default function FileExplorerApp({ initialPath = '/' }) {
                     <div className="flex flex-col">
                         <CommandBar
                             onCreateFolder={() => explorer.handleCreateFolder(prompt("Enter folder name:"))}
-                            onUpload={(e) => explorer.handleUpload(e.target.files[0])}
+                            onUpload={(e) => explorer.handleUpload(e.target.files)}
                             onDelete={() => {
                                 if (confirm("Delete selected items?")) explorer.handleDelete(explorer.selection);
                             }}
@@ -70,14 +91,25 @@ export default function FileExplorerApp({ initialPath = '/' }) {
 
                 // --- MAIN CONTENT ---
                 mainContent={
-                    <FileView
-                        files={explorer.files}
-                        viewMode={explorer.viewMode}
-                        selection={explorer.selection}
-                        onFileClick={explorer.handleOpen}
-                        onSelectionChange={explorer.toggleSelection}
-                        onContextMenu={handleContextMenu}
-                    />
+                    <div className="relative h-full" onDragOver={onDragOver} onDragLeave={onDragLeave} onDrop={onDrop}>
+                        {isDragging && (
+                            <div className="absolute inset-0 z-50 bg-cyan-500/10 backdrop-blur-sm border-2 border-dashed border-cyan-400 flex flex-col items-center justify-center pointer-events-none">
+                                <UploadCloud size={64} className="text-cyan-400 animate-bounce" />
+                                <span className="text-cyan-400 font-bold text-xl mt-4 tracking-widest">DROP TO UPLOAD</span>
+                            </div>
+                        )}
+                        <FileView
+                            files={explorer.files}
+                            viewMode={explorer.viewMode}
+                            selection={explorer.selection}
+                            onFileClick={explorer.handleOpen}
+                            onSelectionChange={explorer.toggleSelection}
+                            onContextMenu={handleContextMenu}
+                            onSort={explorer.handleSort}
+                            sortBy={explorer.sortBy}
+                            sortOrder={explorer.sortOrder}
+                        />
+                    </div>
                 }
 
                 // --- STATUS BAR ---

@@ -1,5 +1,6 @@
 import React from 'react';
 import FileIcon from './FileIcon';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 export default function FileView({
     files,
@@ -7,7 +8,10 @@ export default function FileView({
     selection,
     onFileClick,
     onSelectionChange,
-    onContextMenu
+    onContextMenu,
+    onSort,
+    sortBy,
+    sortOrder
 }) {
     const handleBackgroundClick = (e) => {
         // If clicking background (not file), ensure context menu can still close or trigger background menu
@@ -47,14 +51,26 @@ export default function FileView({
         );
     }
 
+    // List View
     if (viewMode === 'list') {
+        const SortIcon = ({ field }) => {
+            if (sortBy !== field) return null;
+            return sortOrder === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />;
+        };
+
         return (
             <div className="p-2 min-h-full" onClick={handleBackgroundClick}>
                 {/* Header */}
                 <div className="grid grid-cols-12 px-4 py-2 text-[10px] uppercase font-bold text-cyan-700 border-b border-cyan-900/30 select-none sticky top-0 bg-[#0f0f0f]/90 backdrop-blur z-10">
-                    <div className="col-span-6 md:col-span-6">Name</div>
-                    <div className="col-span-3 md:col-span-4">Date Modified</div>
-                    <div className="col-span-3 md:col-span-2 text-right">Size</div>
+                    <div className="col-span-6 md:col-span-6 cursor-pointer hover:text-cyan-400 flex items-center gap-1" onClick={() => onSort?.('name')}>
+                        Name <SortIcon field="name" />
+                    </div>
+                    <div className="col-span-3 md:col-span-4 cursor-pointer hover:text-cyan-400 flex items-center gap-1" onClick={() => onSort?.('date')}>
+                        Date Modified <SortIcon field="date" />
+                    </div>
+                    <div className="col-span-3 md:col-span-2 text-right cursor-pointer hover:text-cyan-400 flex items-center justify-end gap-1" onClick={() => onSort?.('size')}>
+                        Size <SortIcon field="size" />
+                    </div>
                 </div>
                 {/* List Items */}
                 <div className="flex flex-col gap-[1px] mt-1">

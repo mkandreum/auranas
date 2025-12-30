@@ -117,16 +117,27 @@ export default function useFileExplorer(initialPath = '/') {
         }
     };
 
-    const handleUpload = async (file) => {
-        if (!file) return;
+    const handleUpload = async (files) => {
+        if (!files || files.length === 0) return;
         setUploading(true);
-        setStatusMsg(`Uploading ${file.name}...`);
+
+        // Convert FileList to array if needed
+        const fileList = Array.isArray(files) ? files : Array.from(files);
+
         try {
-            await uploadFile(file, currentPath, setProgress);
+            for (let i = 0; i < fileList.length; i++) {
+                const file = fileList[i];
+                setStatusMsg(`Uploading ${file.name} (${i + 1}/${fileList.length})...`);
+                await uploadFile(file, currentPath, (pct) => {
+                    // Update progress: (completed files + current file progress) / total files
+                    const overall = Math.round(((i + (pct / 100)) / fileList.length) * 100);
+                    setProgress(overall);
+                });
+            }
             await loadFiles(currentPath);
-            setStatusMsg('Upload complete');
+            setStatusMsg('All uploads complete');
         } catch (e) {
-            setStatusMsg('Error uploading');
+            setStatusMsg('Error uploading one or more files');
             console.error(e);
         } finally {
             setUploading(false);
@@ -149,9 +160,29 @@ export default function useFileExplorer(initialPath = '/') {
         }
     };
 
-    // Filtered Files
+    const [sortBy, setSortBy] = useState('name'); // 'name' | 'date' | 'size'
+    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
+
+    const handleSort = (field) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(field);
+            setSortOrder('asc');
+        }
+    };
+
+    // Filtered & Sorted Files
     const displayedFiles = files
-        ? files.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        ? files
+            .filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .sort((a, b) => {
+                let res = 0;
+                if (sortBy === 'name') res = a.name.localeCompare(b.name);
+                if (sortBy === 'size') res = (a.size || 0) - (b.size || 0);
+                if (sortBy === 'date') res = new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0);
+                return sortOrder === 'asc' ? res : -res;
+            })
         : [];
 
     return {
@@ -183,6 +214,9 @@ export default function useFileExplorer(initialPath = '/') {
         handleCreateFolder,
         handleDelete,
         handleRename,
-        handleUpload
+        handleUpload,
+        handleSort,
+        sortBy,
+        sortOrder
     };
 }
