@@ -43,7 +43,12 @@ export const listFiles = (req, res) => {
                 params.push(tag);
             }
             if (queryPath && queryPath !== '/' && !tag && !isFav) {
-                const safePath = path.normalize(queryPath).replace(/^(\.\.[\/\\])+/, '');
+                // Normalize path: strip trailing slashes, resolve . and ..
+                let safePath = path.normalize(queryPath).replace(/^(\.\.[\/\\])+/, '').replace(/[\/\\]$/, '');
+                if (safePath === '.') safePath = '';
+                if (!safePath.startsWith('/')) safePath = '/' + safePath;
+                if (safePath === '/') safePath = '/'; // Root special case
+
                 query += ' AND f.parent_path = ?';
                 params.push(safePath);
             }
@@ -611,13 +616,19 @@ export const createDirectory = (req, res) => {
         const user = req.user;
         const id = uuidv4();
 
-        const existing = db.prepare('SELECT id FROM files WHERE user_id = ? AND parent_path = ? AND name = ? AND is_deleted = 0').get(user.id, parentPath, name);
+        // Normalize parent path
+        let normalizedParentPath = path.normalize(parentPath).replace(/^(\.\.[\/\\])+/, '').replace(/[\/\\]$/, '');
+        if (normalizedParentPath === '.') normalizedParentPath = '';
+        if (!normalizedParentPath.startsWith('/')) normalizedParentPath = '/' + normalizedParentPath;
+        if (normalizedParentPath === '/') normalizedParentPath = '/';
+
+        const existing = db.prepare('SELECT id FROM files WHERE user_id = ? AND parent_path = ? AND name = ? AND is_deleted = 0').get(user.id, normalizedParentPath, name);
         if (existing) return res.status(409).json({ error: 'Already exists' });
 
         db.prepare(`
             INSERT INTO files (id, user_id, name, parent_path, type, mime_type, size, created_at, updated_at, is_deleted, is_favorite)
             VALUES (?, ?, ?, ?, 'directory', 'directory', 0, ?, ?, 0, 0)
-        `).run(id, user.id, name, parentPath, Date.now(), Date.now());
+        `).run(id, user.id, name, normalizedParentPath, Date.now(), Date.now());
 
         res.json({ status: 'ok', id, name, path: parentPath });
     } catch (e) {

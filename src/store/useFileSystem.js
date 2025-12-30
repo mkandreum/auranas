@@ -223,9 +223,16 @@ const useFileSystem = create(devtools((set, get) => ({
 
         try {
             // 2. API Call
-            await createDirectory(currentPath, name);
-            // 3. Success: Refresh to get real ID
-            get().refresh();
+            const res = await createDirectory(currentPath, name);
+
+            // 3. Success: Replace optimistic item with real one
+            const finalFiles = get().files.map(f =>
+                f.id === tempId ? { ...f, id: res.id, isOptimistic: false } : f
+            );
+
+            get()._updateCache(currentPath, finalFiles);
+            set({ files: finalFiles });
+
         } catch (e) {
             // 4. Rollback
             console.error('Create Folder Failed', e);
