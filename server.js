@@ -24,6 +24,7 @@ import * as thumbnailController from './controllers/thumbnailController.js';
 import * as authController from './controllers/authController.js';
 import * as userController from './controllers/userController.js';
 import * as shareController from './controllers/shareController.js';
+import * as searchController from './controllers/searchController.js';
 
 // Validations
 import { validateRequest } from './middleware/validationMiddleware.js';
@@ -131,7 +132,8 @@ app.get('/api/files/:id/download', authMiddleware, fileController.downloadFile);
 app.post('/api/files/download-zip', authMiddleware, fileController.downloadZip);
 
 // Search & Discovery
-app.get('/api/search', authMiddleware, fileController.search);
+app.get('/api/search', authMiddleware, searchController.search);
+app.get('/api/search/suggestions', authMiddleware, searchController.suggestions);
 app.get('/api/duplicates', authMiddleware, fileController.findDuplicates);
 
 // Tags
