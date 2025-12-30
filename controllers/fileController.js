@@ -44,7 +44,7 @@ export const listFiles = (req, res) => {
             }
             if (queryPath && queryPath !== '/' && !tag && !isFav) {
                 // Normalize path: strip trailing slashes, resolve . and ..
-                let safePath = path.normalize(queryPath).replace(/^(\.\.[\/\\])+/, '').replace(/[\/\\]$/, '');
+                let safePath = path.normalize(queryPath).replace(/^(\.\.[\/\\])+/, '').replace(/[\/\\]$/, '').replace(/\\/g, '/');
                 if (safePath === '.') safePath = '';
                 if (!safePath.startsWith('/')) safePath = '/' + safePath;
                 if (safePath === '/') safePath = '/'; // Root special case
@@ -617,7 +617,7 @@ export const createDirectory = (req, res) => {
         const id = uuidv4();
 
         // Normalize parent path
-        let normalizedParentPath = path.normalize(parentPath).replace(/^(\.\.[\/\\])+/, '').replace(/[\/\\]$/, '');
+        let normalizedParentPath = path.normalize(parentPath).replace(/^(\.\.[\/\\])+/, '').replace(/[\/\\]$/, '').replace(/\\/g, '/');
         if (normalizedParentPath === '.') normalizedParentPath = '';
         if (!normalizedParentPath.startsWith('/')) normalizedParentPath = '/' + normalizedParentPath;
         if (normalizedParentPath === '/') normalizedParentPath = '/';
