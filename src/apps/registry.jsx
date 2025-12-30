@@ -39,6 +39,15 @@ export const APP_REGISTRY = {
         width: 600,
         height: 500
     },
+    files: {
+        id: 'files',
+        title: 'Explorer',
+        icon: 'Folder',
+        category: 'System',
+        component: FileExplorerApp,
+        width: 1000,
+        height: 700
+    },
     trash: {
         id: 'trash',
         title: 'Trash',
