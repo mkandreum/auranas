@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const STORAGE_ROOT = path.join(__dirname, '../storage');
-const TEMP_DIR = path.join(__dirname, '../storage/.temp');
+const TEMP_DIR = '/tmp/auranas_uploads'; // Use local container temp, not bind mount
 
 fs.ensureDirSync(TEMP_DIR);
 

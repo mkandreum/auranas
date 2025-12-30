@@ -66,7 +66,7 @@ app.use(express.json({ limit: '50mb' }));
 // Serve static files from the build directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-const upload = multer({ dest: 'storage/.temp_upload_cache/' });
+const upload = multer({ dest: '/tmp/auranas_uploads/' });
 
 // Directories
 const STORAGE_DIR = path.join(__dirname, 'storage');
