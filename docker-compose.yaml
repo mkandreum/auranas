@@ -14,9 +14,9 @@ services:
       - JWT_SECRET=${JWT_SECRET:-change-this-secret-key}
       - ADMIN_REGISTRATION_KEY=${ADMIN_REGISTRATION_KEY:-auranas-admin}
     volumes:
-      # Persistent storage (Bind Mounts for easier access)
+      # Persistent storage
       - ./docker/storage:/app/storage
-      - ./docker/data:/app/data
+      - auranas_data:/app/data
       - ./docker/cache:/app/cache
     restart: unless-stopped
     healthcheck:
@@ -25,3 +25,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+volumes:
+  auranas_data:

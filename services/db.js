@@ -8,9 +8,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const dbPath = process.platform === 'win32'
-    ? path.join(__dirname, '../data/auranas.db')
-    : '/tmp/auranas.db'; // Use /tmp in Docker/Linux to avoid EACCES permission issues
+const dbPath = path.join(__dirname, '../data/auranas.db');
 
 let db = null;
 let SQL = null;
