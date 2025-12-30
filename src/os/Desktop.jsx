@@ -18,13 +18,6 @@ const CyberHUD = () => (
             <div className="font-mono text-[10px] text-yellow-500 tracking-[0.2em]">SYSTEM SECURE</div>
         </div>
 
-        {/* Floating Numbers Background */}
-        <div className="absolute left-[10%] top-[20%] font-mono text-yellow-500/10 text-xs flex flex-col gap-1">
-            {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i}>{Math.random().toString(16).substring(2, 10).toUpperCase()}</div>
-            ))}
-        </div>
-
         {/* Center decorative ring */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vh] h-[60vh] rounded-full border border-yellow-500/5 rotate-45 pointer-events-none"></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[58vh] h-[58vh] rounded-full border border-dashed border-yellow-500/5 -rotate-12 pointer-events-none animate-spin" style={{ animationDuration: '60s' }}></div>
@@ -34,11 +27,11 @@ const CyberHUD = () => (
 const GridBackground = ({ isMobile }) => (
     <div className="absolute inset-0 bg-[#020202] overflow-hidden">
         {/* Cyberpunk Grid - Intense */}
-        <div className="absolute inset-0 cyber-grid-intense opacity-30 transform perspective-[1000px] rotate-x-12 scale-110"></div>
+        <div className="absolute inset-0 cyber-grid-intense opacity-40 transform perspective-[1000px] rotate-x-12 scale-110"></div>
 
         {/* Atmosphere */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-yellow-500/5"></div>
-        <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,transparent_0%,#000_70%)] opacity-80"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-yellow-500/10"></div>
+        <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,transparent_0%,#000_60%)] opacity-60"></div>
 
         {/* Scanlines Overlay - Light */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-[0] bg-[length:100%_2px,3px_100%] opacity-20 pointer-events-none"></div>
