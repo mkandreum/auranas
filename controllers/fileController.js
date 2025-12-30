@@ -6,6 +6,14 @@ import archiver from 'archiver';
 import { v4 as uuidv4 } from 'uuid';
 
 // ===== HELPER FUNCTIONS =====
+const sendError = (res, statusCode, message, details = null) => {
+    const response = { error: message };
+    if (details && process.env.NODE_ENV === 'development') {
+        response.details = details;
+    }
+    return res.status(statusCode).json(response);
+};
+
 const removePhysicalFile = async (filePath) => {
     try {
         if (await fs.pathExists(filePath)) await fs.remove(filePath);
@@ -59,7 +67,7 @@ export const listFiles = (req, res) => {
         res.json({ path: queryPath, files });
     } catch (error) {
         console.error('List files error:', error);
-        res.status(500).json({ error: 'Failed' });
+        return sendError(res, 500, 'Failed to list files', error.message);
     }
 };
 
@@ -90,7 +98,8 @@ export const getTimeline = (req, res) => {
 
         res.json({ files, total, hasMore: offset + files.length < total });
     } catch (error) {
-        res.status(500).json({ error: 'Failed' });
+        console.error('Timeline error:', error);
+        return sendError(res, 500, 'Failed to load timeline', error.message);
     }
 };
 
@@ -122,7 +131,7 @@ export const getStats = (req, res) => {
         });
     } catch (error) {
         console.error('Stats error:', error);
-        res.status(500).json({ error: 'Failed' });
+        return sendError(res, 500, 'Failed to retrieve statistics', error.message);
     }
 };
 
@@ -131,9 +140,19 @@ export const deleteFiles = async (req, res) => {
     try {
         const { ids, permanent } = req.body;
         const user = req.user;
-        if (!Array.isArray(ids)) return res.status(400).json({ error: 'Invalid ids' });
 
-        console.log(`[Delete] User ${user.username} deleting ${ids.length} files, permanent: ${permanent}`);
+        // Validation
+        if (!Array.isArray(ids)) {
+            return sendError(res, 400, 'Invalid ids: must be an array');
+        }
+
+        if (ids.length === 0) {
+            return sendError(res, 400, 'Invalid ids: array cannot be empty');
+        }
+
+        if (ids.length > 1000) {
+            return sendError(res, 400, 'Too many files: maximum 1000 files per operation');
+        }
 
         if (permanent) {
             const selectStmt = db.prepare('SELECT path, thumbnail_path FROM files WHERE id = ? AND user_id = ?');
@@ -144,31 +163,20 @@ export const deleteFiles = async (req, res) => {
                     await removePhysicalFile(file.path);
                     if (file.thumbnail_path) await removePhysicalFile(file.thumbnail_path);
                     deleteStmt.run(id, user.id);
-                    console.log(`[Delete] Permanently deleted file ${id}`);
                 }
             }
         } else {
+            // Soft delete - mark as deleted
+            const stmt = db.prepare('UPDATE files SET is_deleted = 1 WHERE id = ? AND user_id = ?');
             for (const id of ids) {
-                // First check if file exists  
-                const file = db.prepare('SELECT id, user_id, is_deleted, name FROM files WHERE id = ?').get(id);
-                console.log(`[Delete] Checking file ${id}:`, file);
-
-                if (!file) {
-                    console.log(`[Delete] File ${id} NOT FOUND`);
-                    continue;
-                }
-
-                // Update without user_id check to see if that's the issue
-                const result = db.prepare('UPDATE files SET is_deleted = 1 WHERE id = ?').run(id);
-                console.log(`[Delete] Updated file ${id}, rows: ${result.changes}`);
+                stmt.run(id, user.id);
             }
         }
 
-        console.log(`[Delete] Complete, ${ids.length} files processed`);
         res.json({ status: 'ok', deleted: ids.length });
     } catch (error) {
         console.error('[Delete] Error:', error);
-        res.status(500).json({ error: 'Delete failed' });
+        return sendError(res, 500, 'Delete operation failed', error.message);
     }
 };
 
@@ -179,29 +187,30 @@ export const restoreFiles = (req, res) => {
         for (const id of ids) stmt.run(id, req.user.id);
         res.json({ status: 'ok', restored: ids.length });
     } catch (e) {
-        res.status(500).json({ error: 'Restore failed' });
+        console.error('[Restore] Error:', e);
+        return sendError(res, 500, 'Restore operation failed', e.message);
     }
 };
 
 export const emptyTrash = async (req, res) => {
     try {
         const files = db.prepare('SELECT id, path, thumbnail_path FROM files WHERE user_id = ? AND is_deleted = 1').all(req.user.id);
-        console.log(`[EmptyTrash] User ${req.user.username} emptying trash: ${files.length} files to delete permanently`);
+
 
         let deleted = 0;
         for (const f of files) {
-            console.log(`[EmptyTrash] Deleting file ${f.id}: ${f.path}`);
+
             await removePhysicalFile(f.path);
             if (f.thumbnail_path) await removePhysicalFile(f.thumbnail_path);
             db.prepare('DELETE FROM files WHERE id = ?').run(f.id);
             deleted++;
         }
 
-        console.log(`[EmptyTrash] Complete: ${deleted} files permanently deleted from disk`);
+
         res.json({ status: 'ok', removed: deleted });
     } catch (e) {
         console.error('[EmptyTrash] Error:', e);
-        res.status(500).json({ error: 'Failed' });
+        return sendError(res, 500, 'Failed to empty trash', e.message);
     }
 };
 
@@ -408,24 +417,47 @@ export const search = (req, res) => {
 // ===== DUPLICATES =====
 export const findDuplicates = (req, res) => {
     try {
-        // Group by size and name pattern (simple duplicate detection)
+        const user = req.user;
+
+        // More sophisticated duplicate detection using size AND name similarity
         const duplicates = db.prepare(`
-            SELECT size, COUNT(*) as count, GROUP_CONCAT(id) as ids
-            FROM files 
-            WHERE user_id = ? AND is_deleted = 0 AND type = 'file' AND size > 0
-            GROUP BY size HAVING count > 1
-            ORDER BY size DESC LIMIT 100
-        `).all(req.user.id);
+            SELECT 
+                f1.size,
+                f1.name as sample_name,
+                COUNT(*) as count, 
+                GROUP_CONCAT(f1.id) as ids,
+                GROUP_CONCAT(f1.name) as names
+            FROM files f1
+            WHERE f1.user_id = ? 
+                AND f1.is_deleted = 0 
+                AND f1.type = 'file' 
+                AND f1.size > 0
+                AND EXISTS (
+                    SELECT 1 FROM files f2 
+                    WHERE f2.user_id = f1.user_id 
+                        AND f2.id != f1.id 
+                        AND f2.size = f1.size
+                        AND f2.is_deleted = 0
+                )
+            GROUP BY f1.size
+            ORDER BY f1.size DESC 
+            LIMIT 100
+        `).all(user.id);
 
         const result = duplicates.map(d => ({
-            ...d,
-            ids: d.ids.split(',').map(Number),
-            sizeFormatted: (d.size / 1024 / 1024).toFixed(2) + ' MB'
+            size: d.size,
+            count: d.count,
+            ids: d.ids.split(','),
+            names: d.names.split(','),
+            sampleName: d.sample_name,
+            sizeFormatted: (d.size / 1024 / 1024).toFixed(2) + ' MB',
+            potentialSavings: ((d.count - 1) * d.size / 1024 / 1024).toFixed(2) + ' MB'
         }));
 
         res.json(result);
     } catch (e) {
-        res.status(500).json({ error: 'Failed' });
+        console.error('[Duplicates] Error:', e);
+        return sendError(res, 500, 'Failed to find duplicates', e.message);
     }
 };
 
@@ -614,6 +646,21 @@ export const createDirectory = (req, res) => {
     try {
         const { name, path: parentPath } = req.body;
         const user = req.user;
+
+        // Validation
+        if (!name || typeof name !== 'string' || name.trim().length === 0) {
+            return sendError(res, 400, 'Invalid directory name');
+        }
+
+        if (name.length > 255) {
+            return sendError(res, 400, 'Directory name too long (max 255 characters)');
+        }
+
+        // Check for invalid characters
+        if (/[<>:"\/\\|?*\x00-\x1f]/g.test(name)) {
+            return sendError(res, 400, 'Directory name contains invalid characters');
+        }
+
         const id = uuidv4();
 
         // Normalize parent path
@@ -633,7 +680,7 @@ export const createDirectory = (req, res) => {
         res.json({ status: 'ok', id, name, path: parentPath });
     } catch (e) {
         console.error('Create directory error:', e);
-        res.status(500).json({ error: 'Failed' });
+        return sendError(res, 500, 'Failed to create directory', e.message);
     }
 };
 
@@ -642,6 +689,20 @@ export const renameFile = (req, res) => {
         const { id } = req.params;
         const { name: newName } = req.body;
         const user = req.user;
+
+        // Validation
+        if (!newName || typeof newName !== 'string' || newName.trim().length === 0) {
+            return sendError(res, 400, 'Invalid file name');
+        }
+
+        if (newName.length > 255) {
+            return sendError(res, 400, 'File name too long (max 255 characters)');
+        }
+
+        // Check for invalid characters
+        if (/[<>:"\/\\|?*\x00-\x1f]/g.test(newName)) {
+            return sendError(res, 400, 'File name contains invalid characters');
+        }
 
         const file = db.prepare('SELECT * FROM files WHERE id = ? AND user_id = ?').get(id, user.id);
         if (!file) return res.status(404).json({ error: 'Not found' });
@@ -662,7 +723,7 @@ export const renameFile = (req, res) => {
         res.json({ status: 'ok', name: newName });
     } catch (e) {
         console.error('Rename error:', e);
-        res.status(500).json({ error: 'Failed' });
+        return sendError(res, 500, 'Failed to rename file', e.message);
     }
 };
 

@@ -62,7 +62,42 @@ export const search = async (req, res) => {
  * Scans recent searches and file names for partial matches.
  */
 export const suggestions = async (req, res) => {
-    // TODO: Implement Autocomplete logic via optimized Trie or Prefix database queries
-    // For now returning empty to allow frontend definition
-    res.json([]);
+    try {
+        const { q } = req.query;
+        const user = req.user;
+
+        if (!user) return res.status(401).json({ error: 'Unauthorized' });
+        if (!q || q.length < 2) {
+            return res.json([]);
+        }
+
+        const db = (await import('../services/db.js')).default;
+
+        // Get file name suggestions (prefix match)
+        const fileMatches = db.prepare(`
+            SELECT DISTINCT name 
+            FROM files 
+            WHERE user_id = ? AND is_deleted = 0 AND name LIKE ? 
+            ORDER BY created_at DESC 
+            LIMIT 10
+        `).all(user.id, `${q}%`);
+
+        // Get tag suggestions
+        const tagMatches = db.prepare(`
+            SELECT DISTINCT name 
+            FROM tags 
+            WHERE user_id = ? AND name LIKE ? 
+            LIMIT 5
+        `).all(user.id, `${q}%`);
+
+        const suggestions = [
+            ...fileMatches.map(f => ({ type: 'file', value: f.name })),
+            ...tagMatches.map(t => ({ type: 'tag', value: t.name }))
+        ];
+
+        res.json(suggestions);
+    } catch (error) {
+        console.error('[Suggestions] Error:', error);
+        res.json([]);
+    }
 };

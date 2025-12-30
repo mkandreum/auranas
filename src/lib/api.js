@@ -107,6 +107,7 @@ export const getActivityLog = async () => (await api.get('/admin/activity')).dat
 // ===== URL GENERATORS =====
 export const getThumbnailUrl = (filePath) => {
     const baseUrl = import.meta.env.VITE_API_URL || '/api';
+    // Get token from storage for query string (needed for <img> tags where axios interceptor doesn't apply)
     try {
         const storage = localStorage.getItem('auth-storage');
         if (storage) {
@@ -115,19 +116,26 @@ export const getThumbnailUrl = (filePath) => {
                 return `${baseUrl}/thumbnail?path=${encodeURIComponent(filePath)}&token=${state.token}`;
             }
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error('Failed to get token for thumbnail URL:', e);
+    }
     return `${baseUrl}/thumbnail?path=${encodeURIComponent(filePath)}`;
 };
 
 export const getDownloadUrl = (fileId) => {
     const baseUrl = import.meta.env.VITE_API_URL || '/api';
+    // Get token from storage for query string (needed for direct download links)
     try {
         const storage = localStorage.getItem('auth-storage');
         if (storage) {
             const { state } = JSON.parse(storage);
-            return `${baseUrl}/files/${fileId}/download?token=${state.token}`;
+            if (state?.token) {
+                return `${baseUrl}/files/${fileId}/download?token=${state.token}`;
+            }
         }
-    } catch (e) { }
+    } catch (e) {
+        console.error('Failed to get token for download URL:', e);
+    }
     return `${baseUrl}/files/${fileId}/download`;
 };
 

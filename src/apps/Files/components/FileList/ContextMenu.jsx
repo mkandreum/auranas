@@ -73,6 +73,31 @@ export default function ContextMenu({ x, y, file, onClose, explorer }) {
         setIsRenaming(true);
     };
 
+    const handleCopy = async () => {
+        try {
+            // Copy file path to clipboard
+            const textToCopy = file.path || file.name;
+            await navigator.clipboard.writeText(textToCopy);
+            onClose();
+        } catch (err) {
+            console.error('Failed to copy to clipboard:', err);
+            // Fallback for older browsers
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = file.path || file.name;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                onClose();
+            } catch (fallbackErr) {
+                console.error('Fallback copy failed:', fallbackErr);
+            }
+        }
+    };
+
     // Adjust position if menu would go off-screen
     const adjustedStyle = {
         top: y,
@@ -154,7 +179,7 @@ export default function ContextMenu({ x, y, file, onClose, explorer }) {
                         <MenuOption icon={Download} label="Download" onClick={handleDownload} />
                     )}
                     <MenuOption icon={Edit2} label="Rename" onClick={startRename} />
-                    <MenuOption icon={Copy} label="Copy" onClick={() => { /* TODO */ onClose(); }} />
+                    <MenuOption icon={Copy} label="Copy Path" onClick={handleCopy} />
 
                     <div className="h-px bg-cyan-900/30 my-1 mx-2"></div>
 

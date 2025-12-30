@@ -253,8 +253,8 @@ const dbWrapper = {
                     stmt.free();
                     return undefined;
                 } catch (e) {
-                    console.error('DB get error:', e.message);
-                    return undefined;
+                    console.error('[DB.get] Error:', e.message, '| SQL:', sql.substring(0, 100));
+                    throw new Error(`Database query failed: ${e.message}`);
                 }
             },
             all: (...params) => {
@@ -278,8 +278,8 @@ const dbWrapper = {
                     stmt.free();
                     return rows;
                 } catch (e) {
-                    console.error('DB all error:', e.message);
-                    return [];
+                    console.error('[DB.all] Error:', e.message, '| SQL:', sql.substring(0, 100));
+                    throw new Error(`Database query failed: ${e.message}`);
                 }
             }
         };

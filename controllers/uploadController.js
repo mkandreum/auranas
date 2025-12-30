@@ -4,6 +4,7 @@ import db from '../services/db.js';
 import { v4 as uuidv4 } from 'uuid';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { sanitizeVirtualPath, getMimeType, getFileType, validateFileName } from '../utils/fileUtils.js';
 
 // ESM fix for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -27,7 +28,8 @@ export const initUpload = (req, res) => {
 
         res.json({ sessionId, status: 'initialized' });
     } catch (e) {
-        res.status(500).json({ error: 'Init failed' });
+        console.error('[Upload Init] Error:', e);
+        res.status(500).json({ error: 'Failed to initialize upload session', details: e.message });
     }
 };
 
@@ -42,7 +44,8 @@ export const getUploadStatus = (req, res) => {
             progress: session.total_chunks > 0 ? Math.round((session.chunks_received / session.total_chunks) * 100) : 0
         });
     } catch (e) {
-        res.status(500).json({ error: 'Failed' });
+        console.error('[Upload Status] Error:', e);
+        res.status(500).json({ error: 'Failed to retrieve upload status', details: e.message });
     }
 };
 
@@ -55,6 +58,14 @@ export const uploadChunk = async (req, res) => {
 
         if (!chunk || !fileName || !user) {
             return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        // Validate filename
+        if (!validateFileName(fileName)) {
+            return res.status(400).json({
+                error: 'Invalid filename',
+                details: 'Filename contains illegal characters or is reserved'
+            });
         }
 
         const currentChunk = parseInt(chunkIndex);
@@ -76,19 +87,25 @@ export const uploadChunk = async (req, res) => {
                 .run(currentChunk + 1, Date.now(), sessionId);
         }
 
-        console.log(`[Upload] User ${user.username}: Chunk ${currentChunk + 1}/${total} for ${fileName}`);
+
 
         // Final chunk - move to permanent storage
         if (currentChunk === total - 1) {
-            // Get user defined path or default to root
-            // Sanitize path to prevent directory traversal
+            // FIXED: Use centralized path sanitization
             let targetDir = req.body.path || '/';
-            // Remove leading/trailing slashes and resolve relative segments
-            targetDir = path.normalize(targetDir).replace(/^(\.\.[\/\\])+/, '');
-            if (targetDir === '.') targetDir = '/';
-            if (!targetDir.startsWith('/')) targetDir = '/' + targetDir;
+            const virtualParentPath = sanitizeVirtualPath(targetDir);
 
-            const userDir = path.join(STORAGE_ROOT, user.username, targetDir);
+            // Build physical path
+            const userBaseDir = path.join(STORAGE_ROOT, user.username);
+            const userDir = path.join(userBaseDir, virtualParentPath.slice(1)); // Remove leading /
+
+            // Verify the resolved path is within user's directory (security check)
+            const resolvedUserDir = path.resolve(userDir);
+            const resolvedBaseDir = path.resolve(userBaseDir);
+            if (!resolvedUserDir.startsWith(resolvedBaseDir)) {
+                throw new Error('Invalid path: directory traversal detected');
+            }
+
             await fs.ensureDir(userDir);
 
             let finalPath = path.join(userDir, fileName);
@@ -102,35 +119,10 @@ export const uploadChunk = async (req, res) => {
             await fs.move(tempFilePath, finalPath, { overwrite: true });
 
             const stats = await fs.stat(finalPath);
-            const virtualParentPath = targetDir;
 
-            // Detect file type for ALL formats
-            const ext = path.extname(fileName).toLowerCase();
-
-            // Comprehensive MIME type detection
-            const imageMimes = {
-                '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif',
-                '.webp': 'image/webp', '.avif': 'image/avif', '.bmp': 'image/bmp', '.ico': 'image/x-icon',
-                '.tiff': 'image/tiff', '.tif': 'image/tiff', '.svg': 'image/svg+xml',
-                '.heic': 'image/heic', '.heif': 'image/heif',
-                '.raw': 'image/x-raw', '.cr2': 'image/x-canon-cr2', '.cr3': 'image/x-canon-cr3',
-                '.nef': 'image/x-nikon-nef', '.arw': 'image/x-sony-arw', '.dng': 'image/x-adobe-dng',
-                '.orf': 'image/x-olympus-orf', '.rw2': 'image/x-panasonic-rw2', '.pef': 'image/x-pentax-pef',
-                '.psd': 'image/vnd.adobe.photoshop'
-            };
-
-            const videoMimes = {
-                '.mp4': 'video/mp4', '.mkv': 'video/x-matroska', '.avi': 'video/x-msvideo',
-                '.mov': 'video/quicktime', '.wmv': 'video/x-ms-wmv', '.flv': 'video/x-flv',
-                '.webm': 'video/webm', '.m4v': 'video/x-m4v', '.mpg': 'video/mpeg', '.mpeg': 'video/mpeg',
-                '.3gp': 'video/3gpp', '.ts': 'video/mp2t', '.mts': 'video/mp2t', '.m2ts': 'video/mp2t',
-                '.ogv': 'video/ogg', '.vob': 'video/dvd'
-            };
-
-            let mimeType = imageMimes[ext] || videoMimes[ext] || 'application/octet-stream';
-            let fileType = 'file';
-            if (imageMimes[ext]) fileType = 'image';
-            else if (videoMimes[ext]) fileType = 'video';
+            // FIXED: Use centralized file type detection
+            const mimeType = getMimeType(fileName);
+            const detectedFileType = getFileType(fileName);
 
             const insert = db.prepare(`
                 INSERT INTO files (user_id, parent_path, name, path, size, type, mime_type, created_at, modified_at)
@@ -147,7 +139,7 @@ export const uploadChunk = async (req, res) => {
                 now: Date.now()
             };
 
-            console.log(`[Upload] Saving file: ${insertParams.name}, Size: ${insertParams.size} bytes (${(insertParams.size / 1024 / 1024).toFixed(2)} MB)`);
+
 
             const result = insert.run(insertParams);
 
@@ -172,8 +164,12 @@ export const uploadChunk = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Upload error:', error);
-        res.status(500).json({ error: 'Upload failed' });
+        console.error('[Upload Chunk] Error:', error);
+        res.status(500).json({
+            error: 'Upload failed',
+            details: error.message,
+            fileName: req.body?.fileName
+        });
     }
 };
 

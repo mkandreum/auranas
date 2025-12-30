@@ -119,7 +119,7 @@ const useFileSystem = create(devtools((set, get) => ({
             if (!forceRefresh && pathCache.has(targetPath)) {
                 const lastTime = lastFetchTime.get(targetPath) || 0;
                 if (Date.now() - lastTime < CACHE_TTL) {
-                    console.log(`[FileSystem] Cache Hit for ${targetPath}`);
+
                     set({ files: pathCache.get(targetPath), currentPath: targetPath, loading: false });
                     return;
                 }
@@ -175,10 +175,23 @@ const useFileSystem = create(devtools((set, get) => ({
         const newSelection = new Set(multi ? selection : []);
 
         if (multi && lastSelectedId && files.length > 0) {
-            // Shift-Click Range Logic (TODO: Needs index lookup)
-            // For now just toggle
-            if (newSelection.has(id)) newSelection.delete(id);
-            else newSelection.add(id);
+            // Shift-Click Range Logic - Select all items between last and current
+            const lastIndex = files.findIndex(f => f.id === lastSelectedId);
+            const currentIndex = files.findIndex(f => f.id === id);
+
+            if (lastIndex !== -1 && currentIndex !== -1) {
+                // Select range from min to max index
+                const start = Math.min(lastIndex, currentIndex);
+                const end = Math.max(lastIndex, currentIndex);
+
+                for (let i = start; i <= end; i++) {
+                    newSelection.add(files[i].id);
+                }
+            } else {
+                // Fallback to toggle if indices not found
+                if (newSelection.has(id)) newSelection.delete(id);
+                else newSelection.add(id);
+            }
         } else {
             // Normal Toggle
             if (newSelection.has(id)) newSelection.delete(id);

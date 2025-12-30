@@ -66,7 +66,12 @@ app.use(express.json({ limit: '50mb' }));
 // Serve static files from the build directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-const upload = multer({ dest: '/tmp/auranas_uploads/' });
+// Ensure temp upload directory exists
+const TEMP_UPLOAD_DIR = '/tmp/auranas_uploads/';
+if (!fs.existsSync(TEMP_UPLOAD_DIR)) {
+    fs.mkdirSync(TEMP_UPLOAD_DIR, { recursive: true });
+}
+const upload = multer({ dest: TEMP_UPLOAD_DIR });
 
 // Directories
 const STORAGE_DIR = path.join(__dirname, 'storage');

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { exec } from 'child_process';
 import util from 'util';
+import { getFileType, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../utils/fileUtils.js';
 
 // Promisify exec for cleaner async/await usage
 const execAsync = util.promisify(exec);
@@ -111,14 +112,15 @@ class ThumbnailService {
                 return cacheFile; // HIT
             }
 
-            // 3. Determine Format Strategy
-            const fileExt = path.extname(filePath).toLowerCase();
-            const isVideo = VIDEO_EXTENSIONS_LIST.includes(fileExt);
+            // 3. Determine Format Strategy using centralized utility
+            const fileType = getFileType(filePath);
 
-            if (isVideo) {
+            if (fileType === 'video') {
                 await this.processVideo(filePath, cacheFile, width, height);
-            } else {
+            } else if (fileType === 'image') {
                 await this.processImage(filePath, cacheFile, width, height, { fit, quality, format });
+            } else {
+                throw new Error('UNSUPPORTED_FILE_TYPE');
             }
 
             return cacheFile;
@@ -165,21 +167,21 @@ class ThumbnailService {
         try {
             await execAsync(command);
         } catch (error) {
-            console.error('FFmpeg extraction failed, falling back to Sharp placeholder generation');
-            // If FFmpeg fails, generate a fallback image with Sharp
-            await sharp({
-                create: {
-                    width: width,
-                    height: height,
-                    channels: 4,
-                    background: { r: 40, g: 40, b: 40, alpha: 1 }
-                }
-            })
-                .composite([{
-                    input: Buffer.from('<svg><text x="50%" y="50%" font-family="Verdana" font-size="35" text-anchor="middle" fill="white">VIDEO</text></svg>'),
-                    gravity: 'center'
-                }])
-                .jpeg()
+            console.error('FFmpeg extraction failed, generating placeholder');
+            // Generate a simple gray placeholder with "VIDEO" text overlay
+            const svgBuffer = Buffer.from(`
+                <svg width="${width}" height="${height}">
+                    <rect width="100%" height="100%" fill="#282828"/>
+                    <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="48" 
+                          text-anchor="middle" dominant-baseline="middle" fill="#ffffff" font-weight="bold">
+                        VIDEO
+                    </text>
+                </svg>
+            `);
+
+            await sharp(svgBuffer)
+                .resize(width, height)
+                .jpeg({ quality: 80 })
                 .toFile(outputPath);
         }
     }
@@ -205,15 +207,21 @@ export const getThumbnail = async (req, res) => {
         const filePath = decodeURIComponent(encodedFilePath);
 
         // 2. Security Check (Directory Traversal Prevention)
+        // FIXED: Properly enforce security check
         const expectedPrefix = path.join(STORAGE_ROOT, user.username);
         const normalizedPath = path.normalize(filePath);
+        const resolvedPath = path.resolve(normalizedPath);
 
-        // Allow accessing shared files if implementing shared link logic later, 
-        // but for now strict user isolation:
-        // Note: For admins or shared files this logic might need expansion.
-        if (!normalizedPath.startsWith(expectedPrefix) && !normalizedPath.startsWith(STORAGE_ROOT)) {
-            // If strict mode, uncomment:
-            // return res.status(403).send('Access Denied');
+        // Strict user isolation - only allow access to user's own files
+        // Admin users could be handled with additional logic here
+        if (!resolvedPath.startsWith(expectedPrefix)) {
+            // Check if user is admin and accessing shared storage
+            const isAdmin = user.role === 'admin';
+            const isInStorage = resolvedPath.startsWith(STORAGE_ROOT);
+
+            if (!isAdmin || !isInStorage) {
+                return res.status(403).send('Access Denied');
+            }
         }
 
         if (!await fs.pathExists(filePath)) {
@@ -241,32 +249,11 @@ export const getThumbnail = async (req, res) => {
 
         // Return a generic error image (1x1 pixel) or status
         if (error.message === 'FILE_NOT_FOUND') return res.status(404).send('File missing');
+        if (error.message === 'UNSUPPORTED_FILE_TYPE') return res.status(400).send('Unsupported file type');
 
         return res.status(500).send('Internal Processing Error');
     }
 };
 
-// ==========================================
-// UTILS & METADATA
-// ==========================================
-
-export const IMAGE_EXTENSIONS_LIST = [
-    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif',
-    '.tiff', '.tif', '.bmp', '.ico',
-    '.heic', '.heif',
-    '.raw', '.cr2', '.cr3', '.nef', '.arw', '.dng', '.orf', '.rw2', '.pef', '.srw',
-    '.svg', '.eps', '.ai', '.psd'
-];
-
-export const VIDEO_EXTENSIONS_LIST = [
-    '.mp4', '.mkv', '.avi', '.mov', '.wmv', '.flv', '.webm',
-    '.m4v', '.mpg', '.mpeg', '.m2ts', '.mts', '.ts',
-    '.3gp', '.3g2', '.prores', '.mxf', '.vob', '.ogv', '.divx', '.asf', '.rm', '.rmvb'
-];
-
-export const getFileType = (filePath) => {
-    const ext = path.extname(filePath).toLowerCase();
-    if (IMAGE_EXTENSIONS_LIST.includes(ext)) return 'image';
-    if (VIDEO_EXTENSIONS_LIST.includes(ext)) return 'video';
-    return 'other';
-};
+// Export for use in other modules
+export { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS };

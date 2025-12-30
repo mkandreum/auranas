@@ -1,6 +1,7 @@
 import React from 'react';
 import FileIcon from './FileIcon';
 import { ChevronUp, ChevronDown } from 'lucide-react';
+import { formatFileSize } from '../../../../lib/formatters';
 
 export default function FileView({
     files,
@@ -111,10 +112,10 @@ export default function FileView({
                                     <span className={`truncate text-sm font-medium ${isSelected ? 'text-cyan-200' : ''}`}>{file.name}</span>
                                 </div>
                                 <div className="col-span-3 md:col-span-4 text-xs font-mono opacity-70">
-                                    {new Date(file.updatedAt || Date.now()).toLocaleDateString()}
+                                    {new Date(file.modified_at || file.created_at || Date.now()).toLocaleDateString()}
                                 </div>
                                 <div className="col-span-3 md:col-span-2 text-xs font-mono opacity-70 text-right">
-                                    {file.size ? (file.size / 1024).toFixed(1) + ' KB' : '-'}
+                                    {file.type === 'directory' ? '-' : formatFileSize(file.size || 0)}
                                 </div>
                             </div>
                         );
