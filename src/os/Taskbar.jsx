@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useOS from './useOS';
 import { getApp } from '../apps/registry.jsx';
+import StartMenu from './StartMenu';
 import * as LucideIcons from 'lucide-react';
 import { Calendar, Wifi, Volume2, Battery, ChevronUp } from 'lucide-react';
 
@@ -134,12 +135,9 @@ export default function Taskbar() {
                 <div className="absolute bottom-[-10px] w-[80%] h-1 bg-yellow-500/20 rounded-full blur-sm"></div>
             </div>
 
-            {/* Start Menu Overlay (Placeholder if needed someday) */}
+            {/* Start Menu Overlay */}
             {startOpen && (
-                <div className="absolute bottom-20 left-4 w-64 h-80 bg-black/90 border border-yellow-500/30 clip-tech-border backdrop-blur-xl p-4 z-50 flex flex-col items-center justify-center text-yellow-500 font-mono">
-                    <div className="text-xl font-bold mb-4 glitch-text" data-text="AURA.OS">AURA.OS</div>
-                    <div className="text-xs text-yellow-500/50">SYSTEM MENU UNDER CONSTRUCTION</div>
-                </div>
+                <StartMenu onClose={() => setStartOpen(false)} />
             )}
         </>
     );
