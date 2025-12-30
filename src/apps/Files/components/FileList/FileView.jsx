@@ -40,7 +40,14 @@ export default function FileView({
 
     if (!files || files.length === 0) {
         return (
-            <div className="h-full flex flex-col items-center justify-center text-cyan-900/40 select-none" onClick={handleBackgroundClick}>
+            <div
+                className="h-full flex flex-col items-center justify-center text-cyan-900/40 select-none"
+                onClick={handleBackgroundClick}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    onContextMenu?.(e, null);
+                }}
+            >
                 <div className="w-24 h-24 border border-cyan-900/30 rounded flex items-center justify-center mb-4">
                     <div className="w-16 h-1 bg-cyan-900/30 rotate-45"></div>
                     <div className="w-16 h-1 bg-cyan-900/30 -rotate-45 absolute"></div>
@@ -59,7 +66,17 @@ export default function FileView({
         };
 
         return (
-            <div className="p-2 min-h-full" onClick={handleBackgroundClick}>
+            <div
+                className="p-2 min-h-full"
+                onClick={handleBackgroundClick}
+                onContextMenu={(e) => {
+                    // Background context menu
+                    if (e.target === e.currentTarget) {
+                        e.preventDefault();
+                        onContextMenu?.(e, null);
+                    }
+                }}
+            >
                 {/* Header */}
                 <div className="grid grid-cols-12 px-4 py-2 text-[10px] uppercase font-bold text-cyan-700 border-b border-cyan-900/30 select-none sticky top-0 bg-[#0f0f0f]/90 backdrop-blur z-10">
                     <div className="col-span-6 md:col-span-6 cursor-pointer hover:text-cyan-400 flex items-center gap-1" onClick={() => onSort?.('name')}>
@@ -109,7 +126,17 @@ export default function FileView({
 
     // GRID VIEW
     return (
-        <div className="p-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 content-start min-h-full" onClick={handleBackgroundClick}>
+        <div
+            className="p-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 content-start min-h-full"
+            onClick={handleBackgroundClick}
+            onContextMenu={(e) => {
+                // Background context menu
+                if (e.target === e.currentTarget) {
+                    e.preventDefault();
+                    onContextMenu?.(e, null);
+                }
+            }}
+        >
             {files.map(file => {
                 const isSelected = selection.includes(file.id);
                 return (
