@@ -7,56 +7,50 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                // Cyberpunk 2077 Theme
-                background: "#0d0d0d",
-                foreground: "#fef3c7",
-
-                card: {
-                    DEFAULT: "#0f0f0f",
-                    foreground: "#fef3c7",
-                },
+                // Cyberpunk 2077 Remastered Palette
+                // Using CSS variables for dynamic runtime theming ability
+                background: "var(--bg-color)",
+                foreground: "var(--text-primary)",
 
                 primary: {
-                    DEFAULT: "#fcd34d",
+                    DEFAULT: "var(--cyber-yellow)",
                     foreground: "#000000",
                 },
-
                 secondary: {
-                    DEFAULT: "#ef4444",
-                    foreground: "#ffffff",
-                },
-
-                muted: {
-                    DEFAULT: "#1a1a1a",
-                    foreground: "#a8a29e",
-                },
-
-                accent: {
-                    DEFAULT: "#f59e0b",
+                    DEFAULT: "var(--holo-cyan)",
                     foreground: "#000000",
                 },
-
                 destructive: {
-                    DEFAULT: "#dc2626",
+                    DEFAULT: "var(--samurai-red)",
                     foreground: "#ffffff",
                 },
-
-                border: "#3d3d00",
-                input: "#1a1a1a",
-                ring: "#fcd34d",
-
-                // Legacy colors for compatibility
-                surface: "rgba(13, 13, 13, 0.9)",
+                muted: {
+                    DEFAULT: "var(--bg-secondary)",
+                    foreground: "var(--text-secondary)",
+                },
+                accent: {
+                    DEFAULT: "var(--neon-orange)",
+                    foreground: "#000000",
+                },
+                border: "var(--border-color)",
+                input: "var(--bg-tertiary)",
+                ring: "var(--cyber-yellow)",
             },
             fontFamily: {
-                sans: ['Rajdhani', 'Orbitron', 'Inter', 'sans-serif'],
-                mono: ['Orbitron', 'monospace'],
+                sans: ['Rajdhani', 'ui-sans-serif', 'system-ui'],
+                mono: ['Orbitron', 'ui-monospace', 'SFMono-Regular'],
+            },
+            backgroundImage: {
+                'cyber-grid': "radial-gradient(circle at center, transparent 0%, #000 100%), linear-gradient(0deg, rgba(252, 238, 10, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(252, 238, 10, 0.03) 1px, transparent 1px)",
+                'scanlines': "linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))",
             },
             animation: {
                 'fade-in': 'fadeIn 0.3s ease-out',
                 'zoom-in': 'zoomIn 0.2s ease-out',
-                'glitch': 'glitch 0.3s ease infinite',
-                'pulse-neon': 'pulseNeon 2s ease-in-out infinite',
+                'glitch': 'glitch 3s infinite',
+                'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'scanline': 'scanline 8s linear infinite',
+                'hologram': 'hologram 4s ease-in-out infinite',
             },
             keyframes: {
                 fadeIn: {
@@ -69,16 +63,21 @@ module.exports = {
                 },
                 glitch: {
                     '0%': { transform: 'translate(0)' },
-                    '20%': { transform: 'translate(-2px, 2px)' },
-                    '40%': { transform: 'translate(2px, -2px)' },
-                    '60%': { transform: 'translate(-2px, -2px)' },
-                    '80%': { transform: 'translate(2px, 2px)' },
+                    '2%': { transform: 'translate(-2px, 2px)' },
+                    '4%': { transform: 'translate(2px, -2px)' },
+                    '6%': { transform: 'translate(-2px, -2px)' },
+                    '8%': { transform: 'translate(2px, 2px)' },
+                    '10%': { transform: 'translate(0)' },
                     '100%': { transform: 'translate(0)' },
                 },
-                pulseNeon: {
-                    '0%, 100%': { opacity: '1', filter: 'brightness(1)' },
-                    '50%': { opacity: '0.8', filter: 'brightness(1.2)' },
-                }
+                scanline: {
+                    '0%': { transform: 'translateY(-100%)' },
+                    '100%': { transform: 'translateY(100%)' },
+                },
+                hologram: {
+                    '0%, 100%': { opacity: '1', filter: 'brightness(1) blur(0px)' },
+                    '50%': { opacity: '0.8', filter: 'brightness(1.2) blur(1px)' },
+                },
             }
         },
     },

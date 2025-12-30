@@ -3,147 +3,152 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════
-   AURANAS - CYBERPUNK 2077 THEME
-   Night City aesthetic: Yellow neon, red accents, dark noir
+   AURANAS OS - NIGHT CITY REMASTERED
+   "High-Fidelity Cyberpunk Aesthetic"
+   v3.0.0 Global Styling
 ═══════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    /* Cyberpunk 2077 Palette */
-    --neon-yellow: 48 100% 50%;
-    --neon-red: 0 100% 50%;
-    --neon-cyan: 180 100% 50%;
-    --neon-orange: 25 100% 50%;
-    --neon-magenta: 330 100% 50%;
+    /* 🎨 DESIGN TOKENS - THE PALETTE */
 
-    /* Dark Base - Night City */
-    --background: 220 20% 3%;
-    --foreground: 48 100% 90%;
+    /* Primary Colors */
+    --cyber-yellow: #fcee0a;
+    /* The iconic yellow */
+    --holo-cyan: #00f0ff;
+    /* Holographic interfaces */
+    --samurai-red: #ff003c;
+    /* Critical alerts */
+    --neon-orange: #ff9d00;
+    /* Secondary accent */
+    --acid-green: #39ff14;
+    /* Unix terminal / Success */
 
-    --card: 220 20% 5%;
-    --card-foreground: 48 100% 90%;
+    /* Background Hierarchy */
+    --bg-color: #050505;
+    /* Deepest void */
+    --bg-secondary: #121212;
+    /* Panels / Cards */
+    --bg-tertiary: #1f1f1f;
+    /* Inputs / Hover states */
+    --glass-bg: rgba(18, 18, 18, 0.65);
+    /* Glassmorphism base */
 
-    --primary: 48 100% 50%;
-    --primary-foreground: 0 0% 0%;
+    /* Text */
+    --text-primary: #ffffeb;
+    /* Slightly warm white */
+    --text-secondary: #94a3b8;
+    /* Muted slate */
+    --text-tertiary: #475569;
+    /* Disabled / Watermarks */
 
-    --secondary: 0 100% 50%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 220 15% 12%;
-    --muted-foreground: 48 30% 60%;
-
-    --accent: 25 100% 50%;
-    --accent-foreground: 0 0% 0%;
-
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 48 50% 20%;
-    --input: 220 20% 8%;
-    --ring: 48 100% 50%;
-  }
-}
-
-@layer base {
-  * {
-    border-color: #3d3d00;
+    /* UI Borders */
+    --border-color: rgba(252, 238, 10, 0.15);
+    --border-active: rgba(252, 238, 10, 0.6);
   }
 
   body {
-    background-color: #0d0d0d;
-    color: #fef3c7;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
-    font-family: 'Rajdhani', 'Orbitron', 'Courier New', monospace;
+    @apply bg-background text-foreground overflow-hidden font-sans;
+    /* Global CRT Scanline Overlay */
+    /* This creates the constant low-fi monitor feel */
     background-image:
-      linear-gradient(180deg, rgba(252, 211, 77, 0.02) 0%, transparent 50%),
-      radial-gradient(ellipse at 20% 80%, rgba(239, 68, 68, 0.03) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 20%, rgba(252, 211, 77, 0.02) 0%, transparent 50%);
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+      linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 2px, 3px 100%;
+  }
+
+  /* Custom Scrollbar - The "Cyber-Rail" */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 0;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--cyber-yellow);
+  }
+
+  /* Selection Highlighting */
+  ::selection {
+    background: var(--cyber-yellow);
+    color: black;
   }
 }
 
-/* Cyberpunk 2077 HUD & UI Elements */
+@layer components {
+  /* 🖥️ UI COMPONENTS */
 
-/* Aggressive Grid Background */
-.cyber-grid-intense {
-  background-image:
-    linear-gradient(rgba(252, 211, 77, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(252, 211, 77, 0.1) 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: center;
-  mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-}
+  /* The "Tech Border" - Angled corners automatically via clip-path */
+  .clip-tech-border {
+    position: relative;
+    clip-path: polygon(0 10px,
+        10px 0,
+        calc(100% - 10px) 0,
+        100% 10px,
+        100% calc(100% - 10px),
+        calc(100% - 10px) 100%,
+        10px 100%,
+        0 calc(100% - 10px));
+  }
 
-/* Angled Tech Borders (Desktop Only mainly) */
-.clip-tech-border {
-  clip-path: polygon(
-    0 10px, 
-    10px 0, 
-    calc(100% - 10px) 0, 
-    100% 10px, 
-    100% calc(100% - 10px), 
-    calc(100% - 10px) 100%, 
-    10px 100%, 
-    0 calc(100% - 10px)
-  );
-}
+  /* Glassmorphism Panel 2.0 - Cleaner, sharper */
+  .cyber-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  }
 
-.clip-tech-corner-tr {
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
-}
+  .cyber-panel:hover {
+    border-color: var(--border-active);
+  }
 
-/* Holographic Panel */
-.glass-panel-cyber {
-  background: rgba(13, 13, 13, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(252, 211, 77, 0.2);
-  box-shadow: 
-    0 4px 30px rgba(0, 0, 0, 0.5),
-    inset 0 0 20px rgba(252, 211, 77, 0.05);
+  /* Neo-Brutalism Button style */
+  .cyber-button {
+    @apply bg-black/50 border border-primary/30 text-primary font-mono uppercase tracking-wider px-4 py-2 transition-all hover:bg-primary hover:text-black hover:shadow-[0_0_15px_rgba(252, 238, 10, 0.5)];
+  }
 }
 
-/* Text Glitch Animation */
-.glitch-text {
-  position: relative;
-}
-.glitch-text::before,
-.glitch-text::after {
-  content: attr(data-text);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #0d0d0d;
-}
-.glitch-text::before {
-  left: 2px;
-  text-shadow: -1px 0 #ef4444;
-  clip: rect(24px, 550px, 90px, 0);
-  animation: glitch-anim-2 3s infinite linear alternate-reverse;
-}
-.glitch-text::after {
-  left: -2px;
-  text-shadow: -1px 0 #00f3ff;
-  clip: rect(85px, 550px, 140px, 0);
-  animation: glitch-anim 2.5s infinite linear alternate-reverse;
-}
+@layer utilities {
+  /* ✨ FX UTILITIES */
 
-@keyframes glitch-anim {
-  0% { clip: rect(12px, 9999px, 86px, 0); }
-  20% { clip: rect(84px, 9999px, 12px, 0); }
-  40% { clip: rect(32px, 9999px, 110px, 0); }
-  60% { clip: rect(6px, 9999px, 54px, 0); }
-  80% { clip: rect(96px, 9999px, 20px, 0); }
-  100% { clip: rect(64px, 9999px, 78px, 0); }
-}
-@keyframes glitch-anim-2 {
-  0% { clip: rect(65px, 9999px, 100px, 0); }
-  20% { clip: rect(20px, 9999px, 15px, 0); }
-  40% { clip: rect(90px, 9999px, 6px, 0); }
-  60% { clip: rect(10px, 9999px, 105px, 0); }
-  80% { clip: rect(45px, 9999px, 50px, 0); }
-  100% { clip: rect(30px, 9999px, 80px, 0); }
+  .text-shadow-neon {
+    text-shadow: 0 0 5px var(--cyber-yellow), 0 0 10px var(--cyber-yellow);
+  }
+
+  .text-shadow-holo {
+    text-shadow: 0 0 5px var(--holo-cyan), 0 0 10px var(--holo-cyan);
+  }
+
+  .text-shadow-error {
+    text-shadow: 0 0 5px var(--samurai-red), 0 0 10px var(--samurai-red);
+  }
+
+  /* CRT Flicker Animation Class */
+  .crt-flicker {
+    animation: flicker 0.15s infinite;
+    opacity: 0.95;
+  }
+
+  @keyframes flicker {
+    0% {
+      opacity: 0.97;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.98;
+    }
+  }
 }
