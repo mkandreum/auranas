@@ -37,8 +37,8 @@ export default {
                 ring: "var(--cyber-yellow)",
             },
             fontFamily: {
-                sans: ['Rajdhani', 'ui-sans-serif', 'system-ui'],
-                mono: ['Orbitron', 'ui-monospace', 'SFMono-Regular'],
+                sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
             },
             backgroundImage: {
                 'cyber-grid': "radial-gradient(circle at center, transparent 0%, #000 100%), linear-gradient(0deg, rgba(252, 238, 10, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(252, 238, 10, 0.03) 1px, transparent 1px)",
