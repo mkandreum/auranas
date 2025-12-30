@@ -80,11 +80,15 @@ export const uploadChunk = async (req, res) => {
 
         // Final chunk - move to permanent storage
         if (currentChunk === total - 1) {
-            const date = new Date();
-            const year = date.getFullYear().toString();
-            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            // Get user defined path or default to root
+            // Sanitize path to prevent directory traversal
+            let targetDir = req.body.path || '/';
+            // Remove leading/trailing slashes and resolve relative segments
+            targetDir = path.normalize(targetDir).replace(/^(\.\.[\/\\])+/, '');
+            if (targetDir === '.') targetDir = '/';
+            if (!targetDir.startsWith('/')) targetDir = '/' + targetDir;
 
-            const userDir = path.join(STORAGE_ROOT, user.username, year, month);
+            const userDir = path.join(STORAGE_ROOT, user.username, targetDir);
             await fs.ensureDir(userDir);
 
             let finalPath = path.join(userDir, fileName);
@@ -98,7 +102,7 @@ export const uploadChunk = async (req, res) => {
             await fs.move(tempFilePath, finalPath, { overwrite: true });
 
             const stats = await fs.stat(finalPath);
-            const virtualParentPath = `/${year}/${month}`;
+            const virtualParentPath = targetDir;
 
             // Detect file type for ALL formats
             const ext = path.extname(fileName).toLowerCase();
