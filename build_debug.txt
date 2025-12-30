@@ -1,0 +1,95 @@
+﻿
+> auranas-unified@2.0.0 build
+> vite build
+
+[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+transforming...
+[32mÔ£ô[39m 3002 modules transformed.
+node.exe : [31mÔ£ù[39m Build failed 
+in 10.58s
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecif 
+   ied: ([31mÔ£ù[39m Build failed in  
+   10.58s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCom 
+   mandError
+ 
+[31merror during build:
+[31msrc/apps/Files/hooks/useFileExplore
+r.js (4:51): "uploadFile" is not 
+exported by "src/lib/api.js", imported 
+by "src/apps/Files/hooks/useFileExplorer
+.js".[31m
+file: 
+[36mC:/Users/daniel.gonzalez/OneDrive 
+- Velilla Group Europe 
+S.L/Escritorio/App NAS/src/apps/Files/ho
+oks/useFileExplorer.js:4:51[31m
+[33m
+2: import useFileSystem from 
+'../../../store/useFileSystem';
+3: import useOS from 
+'../../../os/useOS';
+4: import { deleteFiles, 
+createDirectory, renameFile, uploadFile 
+} from '../../../lib/api';
+                                        
+              ^
+5: 
+6: export default function 
+useFileExplorer(initialPath = '/') {
+[31m
+    at getRollupError (file:///C:/Users/
+daniel.gonzalez/OneDrive%20-%20Velilla%2
+0Group%20Europe%20S.L/Escritorio/App%20N
+AS/node_modules/rollup/dist/es/shared/pa
+rseAst.js:401:41)
+    at error (file:///C:/Users/daniel.go
+nzalez/OneDrive%20-%20Velilla%20Group%20
+Europe%20S.L/Escritorio/App%20NAS/node_m
+odules/rollup/dist/es/shared/parseAst.js
+:397:42)
+    at Module.error (file:///C:/Users/da
+niel.gonzalez/OneDrive%20-%20Velilla%20G
+roup%20Europe%20S.L/Escritorio/App%20NAS
+/node_modules/rollup/dist/es/shared/node
+-entry.js:17022:16)
+    at Module.traceVariable (file:///C:/
+Users/daniel.gonzalez/OneDrive%20-%20Vel
+illa%20Group%20Europe%20S.L/Escritorio/A
+pp%20NAS/node_modules/rollup/dist/es/sha
+red/node-entry.js:17478:29)
+    at ModuleScope.findVariable (file://
+/C:/Users/daniel.gonzalez/OneDrive%20-%2
+0Velilla%20Group%20Europe%20S.L/Escritor
+io/App%20NAS/node_modules/rollup/dist/es
+/shared/node-entry.js:15141:39)
+    at FunctionScope.findVariable (file:
+///C:/Users/daniel.gonzalez/OneDrive%20-
+%20Velilla%20Group%20Europe%20S.L/Escrit
+orio/App%20NAS/node_modules/rollup/dist/
+es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (f
+ile:///C:/Users/daniel.gonzalez/OneDrive
+%20-%20Velilla%20Group%20Europe%20S.L/Es
+critorio/App%20NAS/node_modules/rollup/d
+ist/es/shared/node-entry.js:5688:38)
+    at ReturnValueScope.findVariable (fi
+le:///C:/Users/daniel.gonzalez/OneDrive%
+20-%20Velilla%20Group%20Europe%20S.L/Esc
+ritorio/App%20NAS/node_modules/rollup/di
+st/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (f
+ile:///C:/Users/daniel.gonzalez/OneDrive
+%20-%20Velilla%20Group%20Europe%20S.L/Es
+critorio/App%20NAS/node_modules/rollup/d
+ist/es/shared/node-entry.js:5688:38)
+    at BlockScope.findVariable (file:///
+C:/Users/daniel.gonzalez/OneDrive%20-%20
+Velilla%20Group%20Europe%20S.L/Escritori
+o/App%20NAS/node_modules/rollup/dist/es/
+shared/node-entry.js:5688:38)[39m

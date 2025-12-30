@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import useFileSystem from '../../../store/useFileSystem';
 import useOS from '../../../os/useOS';
-import { deleteFiles, createDirectory, renameFile, uploadFile } from '../../../lib/api';
+import { deleteFiles, createDirectory, renameFile } from '../../../lib/api';
+import { uploadFile } from '../../../lib/fileTransfer';
 
 export default function useFileExplorer(initialPath = '/') {
     // Core System Hooks
