@@ -626,7 +626,7 @@ export const createDirectory = (req, res) => {
         if (existing) return res.status(409).json({ error: 'Already exists' });
 
         db.prepare(`
-            INSERT INTO files (id, user_id, name, parent_path, type, mime_type, size, created_at, updated_at, is_deleted, is_favorite)
+            INSERT INTO files (id, user_id, name, parent_path, type, mime_type, size, created_at, modified_at, is_deleted, is_favorite)
             VALUES (?, ?, ?, ?, 'directory', 'directory', 0, ?, ?, 0, 0)
         `).run(id, user.id, name, normalizedParentPath, Date.now(), Date.now());
 
@@ -655,9 +655,9 @@ export const renameFile = (req, res) => {
                 console.error("FS rename error:", fsErr);
                 return res.status(500).json({ error: 'File system error' });
             }
-            db.prepare('UPDATE files SET name = ?, path = ?, updated_at = ? WHERE id = ?').run(newName, newPath, Date.now(), id);
+            db.prepare('UPDATE files SET name = ?, path = ?, modified_at = ? WHERE id = ?').run(newName, newPath, Date.now(), id);
         } else {
-            db.prepare('UPDATE files SET name = ?, updated_at = ? WHERE id = ?').run(newName, Date.now(), id);
+            db.prepare('UPDATE files SET name = ?, modified_at = ? WHERE id = ?').run(newName, Date.now(), id);
         }
         res.json({ status: 'ok', name: newName });
     } catch (e) {

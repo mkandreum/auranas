@@ -2,15 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Download, Edit2, Trash2, Copy, Scissors, Star } from 'lucide-react';
 import { getDownloadUrl } from '../../../../lib/api';
 import FileIcon from './FileIcon';
+import InputModal from '../../../../components/ui/InputModal';
 
 export default function ContextMenu({ x, y, file, onClose, explorer }) {
     const menuRef = useRef(null);
     const [isRenaming, setIsRenaming] = useState(false);
+    const [showNewFolderModal, setShowNewFolderModal] = useState(false);
     const [renameValue, setRenameValue] = useState(file ? file.name : '');
     const inputRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
+            if (showNewFolderModal) return; // Don't close if modal is open
             if (menuRef.current && !menuRef.current.contains(e.target)) {
                 onClose();
             }
@@ -89,19 +92,33 @@ export default function ContextMenu({ x, y, file, onClose, explorer }) {
     // BACKGROUND MENU (No file selected)
     if (!file) {
         return (
-            <div
-                ref={menuRef}
-                className="fixed bg-[#0f0f0f] border border-cyan-500/30 shadow-[0_0_30px_rgba(0,255,255,0.2)] py-1 rounded-sm w-56 z-[100] backdrop-blur-md"
-                style={adjustedStyle}
-            >
-                <div className="px-3 py-2 border-b border-cyan-900/30 mb-1 flex items-center gap-2 bg-cyan-950/20">
-                    <span className="text-xs font-bold text-cyan-200">Folder Options</span>
+            <>
+                <div
+                    ref={menuRef}
+                    className="fixed bg-[#0f0f0f] border border-cyan-500/30 shadow-[0_0_30px_rgba(0,255,255,0.2)] py-1 rounded-sm w-56 z-[100] backdrop-blur-md"
+                    style={adjustedStyle}
+                >
+                    <div className="px-3 py-2 border-b border-cyan-900/30 mb-1 flex items-center gap-2 bg-cyan-950/20">
+                        <span className="text-xs font-bold text-cyan-200">Folder Options</span>
+                    </div>
+                    <MenuOption icon={Star} label="New Folder" onClick={() => setShowNewFolderModal(true)} />
+                    <MenuOption icon={Download} label="Upload Files" onClick={() => { document.getElementById('upload-trigger')?.click(); onClose(); }} />
+                    <div className="h-px bg-cyan-900/30 my-1 mx-2"></div>
+                    <MenuOption icon={Scissors} label="Refresh" onClick={() => { explorer.navigate(explorer.currentPath); onClose(); }} />
                 </div>
-                <MenuOption icon={Star} label="New Folder" onClick={() => { explorer.handleCreateFolder(prompt("Enter folder name:")); onClose(); }} />
-                <MenuOption icon={Download} label="Upload Files" onClick={() => { document.getElementById('upload-trigger')?.click(); onClose(); }} />
-                <div className="h-px bg-cyan-900/30 my-1 mx-2"></div>
-                <MenuOption icon={Scissors} label="Refresh" onClick={() => { explorer.navigate(explorer.currentPath); onClose(); }} />
-            </div>
+
+                <InputModal
+                    isOpen={showNewFolderModal}
+                    title="New Folder"
+                    placeholder="Enter folder name..."
+                    onClose={() => { setShowNewFolderModal(false); onClose(); }}
+                    onSubmit={(name) => {
+                        explorer.handleCreateFolder(name);
+                        setShowNewFolderModal(false);
+                        onClose();
+                    }}
+                />
+            </>
         );
     }
 
